@@ -1,19 +1,628 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ONUS Test</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ONUS PromptLab">
+<meta name="theme-color" content="#0a0e1a">
+<title>ONUS PromptLab v2</title>
 <style>
-body{background:#0a0e1a;color:#D4AF37;font-family:system-ui;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;}
-h1{font-size:48px;}
-p{color:#8899aa;font-size:18px;}
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{--bg:#0a0e1a;--bg2:#111827;--gold:#D4AF37;--gold-dim:rgba(212,175,55,0.12);--gold-b:rgba(212,175,55,0.25);--tx:#e0e6ed;--tx2:#8899aa;--tx3:#556677;--bd:rgba(255,255,255,0.07);--card:rgba(255,255,255,0.03);--fn:'DM Sans',system-ui,sans-serif;--mo:'JetBrains Mono','Fira Code',monospace;--st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px);--green:#2ecc71;--red:#e74c3c;--blue:#3498db;}
+body{font-family:var(--fn);background:linear-gradient(145deg,var(--bg),var(--bg2),#0d1117);color:var(--tx);min-height:100dvh;overflow-x:hidden;}
+.toast{position:fixed;top:calc(12px + var(--st));left:50%;transform:translateX(-50%);background:var(--gold);color:var(--bg);padding:10px 24px;border-radius:10px;font-weight:700;font-size:13px;z-index:9999;box-shadow:0 8px 32px rgba(212,175,55,0.35);animation:fs .25s ease;pointer-events:none;}
+@keyframes fs{from{opacity:0;transform:translateX(-50%) translateY(-10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+/* Header */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:calc(10px + var(--st)) 16px 10px;border-bottom:1px solid rgba(212,175,55,0.12);background:rgba(10,14,26,0.92);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;}
+.hdr-l{display:flex;align-items:center;gap:10px;}
+.logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--gold),#aa8520);display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 4px 16px rgba(212,175,55,0.25);}
+.logo-t{font-size:17px;font-weight:800;letter-spacing:1.5px;color:#fff;line-height:1.2;}
+.logo-a{color:var(--gold);font-weight:400;}
+.logo-sub{font-size:8px;color:var(--tx3);letter-spacing:2.5px;text-transform:uppercase;}
+.nav{display:flex;gap:3px;}
+.nb{padding:6px 11px;border-radius:7px;border:1px solid var(--bd);background:0;color:var(--tx2);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--fn);display:flex;align-items:center;gap:3px;}
+.nb.a{background:var(--gold-dim);color:var(--gold);border-color:var(--gold-b);}
+.bdg{background:var(--gold);color:var(--bg);border-radius:7px;padding:1px 5px;font-size:9px;font-weight:800;margin-left:2px;}
+/* Mobile nav */
+.mn{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(10,14,26,0.95);backdrop-filter:blur(16px);border-top:1px solid rgba(212,175,55,0.1);padding:4px 0 calc(4px + var(--sb));z-index:100;}
+.mn-i{display:flex;justify-content:space-around;}
+.mn-b{display:flex;flex-direction:column;align-items:center;gap:1px;padding:5px 8px;border:0;background:0;color:var(--tx2);font-size:8px;font-weight:600;cursor:pointer;font-family:var(--fn);}
+.mn-b.a{color:var(--gold);}
+.mn-b .mi{font-size:18px;}
+/* Layout */
+.main{display:flex;min-height:calc(100dvh - 56px);}
+.side{width:220px;padding:12px 10px;border-right:1px solid var(--bd);overflow-y:auto;max-height:calc(100dvh - 56px);flex-shrink:0;}
+.cnt{flex:1;padding:14px;overflow-y:auto;max-height:calc(100dvh - 56px);}
+/* Sidebar */
+.nbtn{width:100%;padding:10px;border-radius:9px;border:1px dashed rgba(212,175,55,0.4);background:rgba(212,175,55,0.05);color:var(--gold);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--fn);margin-bottom:12px;}
+.sl{font-size:8px;text-transform:uppercase;letter-spacing:2px;color:var(--tx3);margin-bottom:4px;font-weight:700;}
+.ss{margin-bottom:12px;}
+/* Collapsible sidebar sections */
+.ss-toggle{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:4px 0;}
+.ss-toggle .sl{margin:0;}
+.ss-arrow{font-size:10px;color:var(--tx3);transition:transform .2s;}
+.ss-body{overflow:hidden;transition:max-height .3s ease;max-height:500px;}
+.ss-body.collapsed{max-height:0;}
+.cb{display:flex;align-items:center;gap:6px;width:100%;padding:5px 7px;border-radius:5px;border:0;background:0;color:var(--tx2);font-size:11px;cursor:pointer;text-align:left;font-family:var(--fn);}
+.cb.a{background:var(--gold-dim);color:var(--gold);}
+.cc{margin-left:auto;font-size:9px;color:var(--tx3);font-weight:600;}
+.tc{display:flex;flex-wrap:wrap;gap:3px;}
+.tp{padding:2px 8px;border-radius:8px;border:1px solid var(--bd);background:0;color:var(--tx3);font-size:9px;cursor:pointer;font-family:var(--fn);}
+.tp.a{background:var(--gold-dim);color:var(--gold);border-color:var(--gold-b);}
+.stb{padding:10px;border-radius:9px;background:var(--card);border:1px solid var(--bd);}
+.sr{display:flex;justify-content:space-between;padding:3px 0;}
+.sr-l{font-size:10px;color:var(--tx3);}
+.sr-v{font-size:11px;font-weight:700;color:var(--gold);}
+/* Search */
+.sbar{display:flex;gap:6px;margin-bottom:12px;}
+.sin{flex:1;padding:9px 12px;border-radius:9px;border:1px solid var(--bd);background:rgba(255,255,255,0.04);color:var(--tx);font-size:13px;font-family:var(--fn);outline:0;}
+.clr{padding:9px 12px;border-radius:9px;border:1px solid var(--bd);background:0;color:var(--tx2);font-size:11px;cursor:pointer;font-family:var(--fn);}
+.io{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap;}
+.iob{padding:5px 10px;border-radius:6px;border:1px solid var(--bd);background:0;color:var(--tx2);font-size:10px;font-weight:600;cursor:pointer;font-family:var(--fn);}
+/* Grid */
+.grid{display:grid;grid-template-columns:1fr;gap:12px;}
+/* Cards */
+.cd{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:7px;}
+.cd-h{display:flex;align-items:center;gap:6px;}
+.cd-dot{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;}
+.cd-cl{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--tx3);font-weight:700;}
+.cd-act{margin-left:auto;display:flex;gap:2px;}
+.ib{background:0;border:0;font-size:13px;cursor:pointer;opacity:.5;padding:3px;}
+.cd-t{font-size:14px;font-weight:700;color:#fff;}
+.cd-tags{display:flex;flex-wrap:wrap;gap:3px;}
+.mt{padding:2px 6px;border-radius:4px;background:var(--gold-dim);color:var(--gold);font-size:8px;font-weight:600;letter-spacing:.3px;}
+.cd-c{font-size:10px;line-height:1.6;color:var(--tx2);white-space:pre-wrap;word-break:break-word;margin:0;max-height:80px;overflow:hidden;font-family:var(--mo);transition:max-height .3s ease;position:relative;}
+.cd-c.expanded{max-height:none;}
+.cd-expand{font-size:10px;color:var(--gold);cursor:pointer;font-weight:600;border:0;background:0;padding:2px 0;font-family:var(--fn);}
+.cd-f{display:flex;gap:5px;margin-top:auto;padding-top:6px;border-top:1px solid var(--bd);}
+.ab{flex:1;padding:7px 8px;border-radius:7px;border:1px solid var(--bd);background:0;color:var(--tx2);font-size:10px;font-weight:600;cursor:pointer;font-family:var(--fn);}
+.ab.g{background:var(--gold-dim);color:var(--gold);border-color:var(--gold-b);}
+.ab.d{background:rgba(46,204,113,0.12);color:var(--green);border-color:rgba(46,204,113,0.25);}
+.ab.dm{opacity:.45;pointer-events:none;}
+/* Version badge */
+.vb{font-size:8px;color:var(--tx3);padding:1px 5px;border-radius:4px;background:rgba(255,255,255,0.04);margin-left:auto;}
+/* Score badge */
+.scb{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:5px;font-size:9px;font-weight:700;}
+.scb.hi{background:rgba(46,204,113,0.1);color:var(--green);}
+.scb.md{background:rgba(241,196,15,0.1);color:#f1c40f;}
+.scb.lo{background:rgba(231,76,60,0.1);color:var(--red);}
+/* Builder */
+.bw{padding:16px;max-width:800px;margin:0 auto;}
+.bt{font-size:20px;font-weight:800;color:#fff;margin-bottom:3px;}
+.bsub{font-size:12px;color:var(--tx3);margin-bottom:16px;}
+.bc{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:8px;}
+.bc-top{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
+.bc-idx{width:22px;height:22px;border-radius:5px;background:var(--gold-dim);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;}
+.bc-t{font-size:12px;font-weight:700;color:var(--tx);flex:1;}
+.mbtn{width:26px;height:26px;border-radius:5px;border:1px solid var(--bd);background:0;color:var(--tx2);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:var(--fn);}
+.mbtn.dg{color:var(--red);}
+.bc-c{font-size:10px;line-height:1.6;color:var(--tx2);white-space:pre-wrap;margin:0;font-family:var(--mo);}
+.cps{background:rgba(212,175,55,0.04);border:1px solid rgba(212,175,55,0.12);border-radius:12px;padding:16px;margin-top:16px;}
+.cp-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:6px;}
+.cp-t{font-size:15px;font-weight:700;color:var(--gold);}
+.cp-txt{font-size:10px;line-height:1.7;color:#c0ccdd;white-space:pre-wrap;word-break:break-word;margin:0;padding:12px;background:rgba(0,0,0,0.3);border-radius:8px;font-family:var(--mo);max-height:300px;overflow:auto;}
+.cp-m{display:flex;justify-content:space-between;margin-top:8px;font-size:9px;color:var(--tx3);flex-wrap:wrap;gap:4px;}
+/* Buttons */
+.gb{padding:7px 14px;border-radius:7px;border:1px solid var(--gold-b);background:var(--gold-dim);color:var(--gold);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--fn);}
+.ob{padding:7px 14px;border-radius:7px;border:1px solid var(--bd);background:0;color:var(--tx2);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--fn);}
+/* Masters */
+.mw{padding:16px;max-width:800px;margin:0 auto;}
+.mc{background:var(--card);border:1px solid rgba(212,175,55,0.1);border-radius:12px;padding:16px;margin-bottom:12px;}
+.mc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;flex-wrap:wrap;gap:6px;}
+.mc-t{font-size:14px;font-weight:700;color:#fff;}
+.mc-m{font-size:10px;color:var(--tx3);margin-bottom:5px;}
+.mc-sum{font-size:11px;color:var(--gold);cursor:pointer;font-weight:600;margin-top:8px;}
+/* Form */
+.fo{background:rgba(0,0,0,0.5);border-radius:12px;padding:16px;margin-bottom:14px;border:1px solid rgba(212,175,55,0.12);}
+.fo-t{font-size:16px;font-weight:700;color:var(--gold);margin-bottom:12px;}
+.fo-g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.fg{margin-bottom:10px;}
+.fl{display:block;font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--tx3);margin-bottom:4px;font-weight:700;}
+.fi,.fsel{width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--bd);background:rgba(255,255,255,0.04);color:var(--tx);font-size:13px;font-family:var(--fn);outline:0;}
+.fsel{background:rgba(10,14,26,0.9);}
+.fta{width:100%;padding:10px;border-radius:7px;border:1px solid var(--bd);background:rgba(255,255,255,0.04);color:var(--tx);font-size:11px;font-family:var(--mo);line-height:1.6;outline:0;resize:vertical;}
+.tir{display:flex;gap:5px;}
+.atb{width:34px;border-radius:7px;border:1px solid var(--gold-b);background:var(--gold-dim);color:var(--gold);font-size:16px;cursor:pointer;}
+.qt{padding:2px 6px;border-radius:4px;border:1px solid var(--bd);background:0;color:var(--tx3);font-size:8px;cursor:pointer;font-family:var(--fn);}
+.fa{display:flex;justify-content:flex-end;gap:6px;margin-top:4px;}
+/* Tag Palette in Form - organized by category */
+.tp-section{margin-bottom:8px;}
+.tp-label{font-size:8px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold);font-weight:700;margin-bottom:3px;}
+/* Song Timeline */
+.tl-wrap{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:14px;}
+.tl-title{font-size:13px;font-weight:700;color:#fff;margin-bottom:8px;}
+.tl-sub{font-size:10px;color:var(--tx3);margin-bottom:10px;}
+.tl-track{display:flex;gap:4px;flex-wrap:wrap;min-height:40px;padding:8px;border-radius:8px;border:2px dashed rgba(255,255,255,0.08);background:rgba(0,0,0,0.15);margin-bottom:10px;}
+.tl-block{padding:6px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;user-select:none;}
+.tl-block .tl-x{font-size:9px;opacity:.6;cursor:pointer;margin-left:4px;}
+.tl-palette{display:flex;flex-wrap:wrap;gap:4px;}
+.tl-add{padding:5px 10px;border-radius:6px;border:1px solid var(--bd);background:rgba(255,255,255,0.03);color:var(--tx2);font-size:10px;font-weight:600;cursor:pointer;font-family:var(--fn);}
+.tl-add:active{background:var(--gold-dim);color:var(--gold);}
+.tl-output{font-size:10px;color:var(--tx2);font-family:var(--mo);margin-top:8px;padding:8px;background:rgba(0,0,0,0.2);border-radius:6px;}
+.tl-copy{font-size:9px;color:var(--gold);cursor:pointer;font-weight:600;border:0;background:0;font-family:var(--fn);margin-top:4px;}
+/* Scorecard */
+.sc-wrap{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:14px;}
+.sc-title{font-size:13px;font-weight:700;color:#fff;margin-bottom:10px;}
+.sc-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.sc-label{font-size:11px;color:var(--tx2);width:140px;flex-shrink:0;}
+.sc-bar{flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,0.06);overflow:hidden;position:relative;}
+.sc-fill{height:100%;border-radius:4px;transition:width .3s ease;}
+.sc-val{font-size:11px;font-weight:700;width:28px;text-align:right;}
+.sc-total{display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:1px solid var(--bd);margin-top:4px;}
+.sc-total-label{font-size:12px;font-weight:700;color:#fff;}
+.sc-total-val{font-size:18px;font-weight:800;}
+/* Empty */
+.emp{text-align:center;padding:50px 16px;grid-column:1/-1;}
+.emp-i{font-size:44px;margin-bottom:10px;}
+.emp-t{color:var(--tx2);font-size:14px;line-height:1.6;}
+.emp-t strong{color:var(--gold);}
+/* Version History */
+.vh{margin-top:8px;font-size:9px;}
+.vh summary{color:var(--gold);cursor:pointer;font-weight:600;font-size:10px;}
+.vh-item{padding:6px 8px;border-left:2px solid var(--bd);margin:4px 0 4px 8px;color:var(--tx3);}
+.vh-item .vh-date{font-weight:600;color:var(--tx2);margin-right:6px;}
+/* Responsive */
+@media(max-width:768px){.hdr .nav{display:none;}.mn{display:block;}.main{flex-direction:column;padding-bottom:65px;}.side{width:100%;max-height:none;border-right:0;border-bottom:1px solid var(--bd);padding:10px;}.cnt{max-height:none;padding:10px;}.fo-g2{grid-template-columns:1fr;}.bw,.mw{padding-bottom:calc(75px + var(--sb));}}
+@media(min-width:769px){.grid{grid-template-columns:repeat(auto-fill,minmax(320px,1fr));}}
+@media(min-width:1100px){.grid{grid-template-columns:repeat(3,1fr);}}
 </style>
 </head>
 <body>
-<div>
-<h1>⚡ ONUS PromptLab</h1>
-<p>GitHub Pages is working! Full app coming next.</p>
+<div id="app"></div>
+<nav class="mn" id="mobileNav">
+<div class="mn-i">
+<button class="mn-b a" onclick="switchView('library')" id="mn-library"><span class="mi">📚</span>Library</button>
+<button class="mn-b" onclick="switchView('timeline')" id="mn-timeline"><span class="mi">🎼</span>Timeline</button>
+<button class="mn-b" onclick="switchView('ai')" id="mn-ai"><span class="mi">🤖</span>AI</button>
+<button class="mn-b" onclick="switchView('builder')" id="mn-builder"><span class="mi">🔧</span>Builder<span id="mn-badge" style="display:none" class="bdg">0</span></button>
+<button class="mn-b" onclick="switchView('scorecard')" id="mn-scorecard"><span class="mi">📊</span>Score</button>
+<button class="mn-b" onclick="switchView('saved')" id="mn-saved"><span class="mi">⚡</span>Masters</button>
 </div>
+</nav>
+<script>
+// ═══════ DATA ═══════
+const CATEGORIES=[{id:"lyrics",label:"Lyrics",icon:"🎤",color:"#D4AF37"},{id:"style",label:"Style Tags",icon:"🎛️",color:"#C0392B"},{id:"production",label:"Production",icon:"🔊",color:"#2ECC71"},{id:"hook",label:"Hook/Concept",icon:"🪝",color:"#3498DB"},{id:"vocal",label:"Vocal Direction",icon:"🗣️",color:"#E67E22"},{id:"arrangement",label:"Arrangement",icon:"📐",color:"#9B59B6"},{id:"mix",label:"Mix Notes",icon:"🎚️",color:"#1ABC9C"},{id:"master",label:"Master Prompt",icon:"⚡",color:"#F1C40F"}];
+
+// ═══════ 200+ TAG PALETTE ═══════
+const TAG_PALETTE={
+"Genre":["southern-soul","R&B","hip-hop","rap","pop","country","EDM","neo-soul","gospel","funk","boom-bap","trap","west-coast","east-coast","dirty-south","new-jack-swing","live-band","synth-funk","alt-R&B","soul","afrobeats","reggaeton","drill","lo-fi","jazz","blues","rock","indie","dancehall","house","techno","drum-and-bass","dubstep","ambient","classical","latin-pop","K-pop","Americana","outlaw-country","country-pop","G-funk","hyphy","crunk","bounce","phonk","cloud-rap","emo-rap","conscious-rap","gangsta-rap","melodic-rap"],
+"Mood":["warm","aggressive","chill","celebratory","melancholy","hype","intimate","anthemic","nostalgic","triumphant","gritty","dreamy","euphoric","dark","uplifting","sensual","playful","intense","peaceful","rebellious","bittersweet","cinematic","raw","sophisticated","groovy","hypnotic","yearning","defiant","joyful","haunting"],
+"Instruments":["Rhodes","Wurlitzer","piano","organ","synth-pad","synth-lead","analog-synth","Moog","808","TR-808","drum-machine","live-drums","congas","bongos","tambourine","handclaps","finger-snaps","shaker","hi-hats","crisp-snare","kick-drum","bass-guitar","upright-bass","electric-guitar","acoustic-guitar","rhythm-guitar","lead-guitar","wah-guitar","horns","trumpet","saxophone","trombone","flute","strings","violin","cello","harp","talkbox","vocoder","steel-guitar","banjo","fiddle","harmonica","turntables","scratches","sample-chops"],
+"Vocals":["male-vocal","female-vocal","group-harmonies","choir","falsetto","baritone","tenor","alto","soprano","raspy","silky","nasal","talk-rap","talk-sing","croon","belting","whisper","ad-libs","call-and-response","gospel-runs","melisma","stacked-harmonies","vocal-chops","auto-tune","vocodex","spoken-word","preacher-style","conversational","animated-delivery","staccato-vocal"],
+"Production":["vocal-forward","bass-heavy","lo-fi","hi-fi","warm-tape","analog-warm","digital-clean","vinyl-crackle","radio-ready","club-ready","headphone-mix","live-room","tight-mix","wide-stereo","mono-compatible","compressed","dynamic","saturated","crisp","muddy-free","sub-bass","mid-forward","bright","dark-mix","airy","dry-mix","wet-reverb","sidechain","chopped-samples","layered"],
+"Era":["60s","70s","80s","90s","2000s","2010s","2020s","modern","vintage","retro","classic","timeless","future","throwback","golden-era","new-school","old-school"],
+"Structure":["verse-chorus","AABA","through-composed","hook-first","drop-build","call-response","vamp-heavy","extended-outro","short-intro","long-intro","bridge-heavy","post-chorus","pre-chorus-lift","breakdown","buildup","fade-out"],
+"BPM":["60-70 BPM","70-80 BPM","80-90 BPM","90-100 BPM","100-110 BPM","110-120 BPM","120-130 BPM","130-140 BPM","140-150 BPM","150+ BPM"]
+};
+const ALL_TAGS=Object.values(TAG_PALETTE).flat();
+const GENRE_TAGS=TAG_PALETTE.Genre;
+const MOOD_TAGS=TAG_PALETTE.Mood;
+
+// ═══════ SONG TIMELINE SECTIONS ═══════
+const SECTIONS=[
+{id:"intro",label:"Intro",color:"#3498db",bracket:"[Intro]"},
+{id:"verse",label:"Verse",color:"#2ecc71",bracket:"[Verse]"},
+{id:"prechorus",label:"Pre-Chorus",color:"#e67e22",bracket:"[Pre-Chorus]"},
+{id:"chorus",label:"Chorus",color:"#D4AF37",bracket:"[Chorus]"},
+{id:"postchorus",label:"Post-Chorus",color:"#f39c12",bracket:"[Post-Chorus]"},
+{id:"bridge",label:"Bridge",color:"#9b59b6",bracket:"[Bridge]"},
+{id:"drop",label:"Drop",color:"#e74c3c",bracket:"[Drop]"},
+{id:"breakdown",label:"Breakdown",color:"#1abc9c",bracket:"[Breakdown]"},
+{id:"buildup",label:"Build-Up",color:"#e74c3c",bracket:"[Build-Up]"},
+{id:"vamp",label:"Vamp",color:"#2ecc71",bracket:"[Vamp]"},
+{id:"outro",label:"Outro",color:"#95a5a6",bracket:"[Outro]"},
+{id:"fadeout",label:"Fade Out",color:"#7f8c8d",bracket:"[Fade out]"},
+{id:"drumfill",label:"Drum Fill",color:"#c0392b",bracket:"[Drum Fill]"},
+{id:"silence",label:"Silence",color:"#34495e",bracket:"[Silence]"},
+{id:"adlibs",label:"Ad Libs",color:"#e67e22",bracket:"[Ad libs]"},
+{id:"crowdchant",label:"Crowd Chant",color:"#D4AF37",bracket:"[Crowd chant]"},
+];
+
+// ═══════ HIT SCORECARD CRITERIA ═══════
+const SCORE_CRITERIA=[
+{id:"hook",label:"Hook Memorability",desc:"Short, loopable, instantly replayable"},
+{id:"section",label:"Section Clarity",desc:"Brain can 'see the form'"},
+{id:"groove",label:"Groove / Drive",desc:"Entrainment + movement potential"},
+{id:"emotion",label:"Emotional Arc",desc:"Tension → release design"},
+{id:"lyrics",label:"Lyrical Replayability",desc:"Depth rewards repeat listens"},
+{id:"spectral",label:"Spectral Balance",desc:"Translates across playback systems"},
+{id:"translation",label:"Mix Translation",desc:"Phone, car, club, earbuds"},
+{id:"novelty",label:"Novelty vs Familiarity",desc:"Optimal differentiation"},
+];
+
+// ═══════ INITIAL PROMPTS ═══════
+const INITIAL_PROMPTS=[
+{id:"p1",title:"Southern Soul Reunion Groove",category:"style",tags:["southern-soul","live-band","warm","celebratory"],content:"southern-soul, live-band, R&B, soul, warm, gospel-tinged, handclaps, congas, Rhodes, horn-stabs, new-jack-swing-polish, vocal-forward, analog-warm, 98 BPM, Key of Eb Major",rating:5,created:Date.now()-86400000,versions:[]},
+{id:"p2",title:"Preacher Talk-Sing Bridge",category:"vocal",tags:["gospel","southern-soul","anthemic"],content:"[Bridge — drop to handclaps + congas only; lead vocal shifts to preacher talk-sing; testimony energy]\n(Clap it up, clap it up)\nSpoken-word delivery over minimal percussion, building to full band re-entry",rating:4,created:Date.now()-172800000,versions:[]},
+{id:"p3",title:"Cookout Hook Architecture",category:"hook",tags:["southern-soul","R&B","celebratory","anthemic"],content:"Hook must be 2-4 lines, singable on first listen, crowd-chantable. Call-and-response structure with background vocals mirroring lead. Title phrase repeats 3-5x across track. 8-12 second replay loop.",rating:5,created:Date.now()-259200000,versions:[]},
+{id:"p4",title:"Live Band Core Arrangement",category:"arrangement",tags:["live-band","southern-soul","funk"],content:"Core: rhythm guitar (muted 16th-note funk comping), lead guitar (short answer phrases), Rhodes/EP, round bass locked to kick, tight snare, consistent hats, congas/percussion, BG vocals (small choir stack). Accents: horn stabs on chorus downbeats, subtle synth pad to widen choruses.",rating:4,created:Date.now()-345600000,versions:[]},
+{id:"p5",title:"Anti-Sing Rap Lock",category:"vocal",tags:["rap","hip-hop","west-coast","gritty"],content:"[Vocal: RAP ONLY] — staccato talk-rap, no melody drift, no singing. Hard consonant emphasis, syllable clustering, controlled syncopation. Push-pull pocket, conversational timing. Ad-libs in gaps only.",rating:5,created:Date.now()-432000000,versions:[]},
+{id:"p6",title:"Bay Area Staccato Talk-Rap — Full Vocal DNA",category:"vocal",tags:["rap","west-coast","hip-hop","gritty","hype"],content:"[Vocal: RAP ONLY — NO SINGING, NO MELODY, NO HUMMING]\n\nVoice character: nasal, sharp, animated — like a voice actor doing stand-up inside a rap verse. Tone is bright and forward, cuts through without screaming. Cartoon uncle energy — playful menace, not monotone tough guy. Voice warps mid-word: stretching vowels for comedic timing, snapping consonants like percussion hits, pinching nose on punchlines.\n\nCadence: staccato-first — short choppy bursts of 3-5 syllables then hard pause. Rubber-ball bounce: accelerate mid-line then brake suddenly. Push-pull timing: some phrases AHEAD of beat, some BEHIND — never locked on grid. Syllable stacking: cram 8 where 4 go, leave whole beat empty. Stop-start restart: cut out mid-bar, re-enter on unexpected syllable.\n\nAd-libs: sit IN gaps between clusters. Types: \"uhh!\", \"yup!\", \"aye!\", tongue clicks, \"brrt\", \"sheesh\". One ad-lib every 4-6 bars. Double-track on punchline word only.\n\nRhyme: internal over end rhyme. 3-4 syllable chains. Slant/near-rhymes preferred. Punchlines land on LAST word before pause. Shift pattern every 4 bars.\n\nPersona: hustler-philosopher. Comedic hyper-specific similes. Uncle-who-gives-game. Regional slang as rhythm tools. Rapid-fire noun lists stopped cold.\n\nMix: vocal forward and dry, close-mic, nasal EQ bump 1-2kHz.\n\nAnti-drift: if vocal melodizes pull back to hard talk-rap immediately.",rating:5,created:Date.now()-518400000,versions:[]},
+{id:"p7",title:"Bay Staccato Rap — Style Tags",category:"style",tags:["rap","west-coast","hip-hop","gritty"],content:"bay-area, staccato-rap, talk-rap, talk-rap, slangy-cadence, humorous-braggadocio, nasal-vocal, game-talk, hyphy-adjacent, slick-storytelling, choppy-flow, hard-pocket, vocal-forward, dry-mix, 92 BPM, Key of F Minor",rating:5,created:Date.now()-518400000,versions:[]},
+{id:"p8",title:"Bay Rap — Alt Style A (Trunk Rattle)",category:"style",tags:["rap","west-coast","hip-hop","hype"],content:"west-coast-rap, staccato-rap, talk-rap, talk-rap, animated-vocal, comedic-punchlines, bay-slang, hustler-wisdom, trunk-rattle-bass, crisp-snare, 88 BPM, Key of Eb Minor",rating:4,created:Date.now()-518400000,versions:[]},
+{id:"p9",title:"Bay Rap — Alt Style B (Mob Music)",category:"style",tags:["rap","west-coast","hip-hop","gritty"],content:"norcal-rap, talk-rap, talk-rap, rubber-ball-cadence, stop-start-flow, game-talk, nasal-sharp, percussive-vocal, mob-music, synth-stabs, 96 BPM, Key of G Minor",rating:4,created:Date.now()-518400000,versions:[]},
+];
+
+// ═══════ STATE ═══════
+let S={prompts:[],builder:[],masters:[],view:"library",cat:"all",tags:[],q:"",edit:null,copied:null,timeline:[],scores:{hook:7,section:6,groove:8,emotion:7,lyrics:6,spectral:5,translation:5,novelty:6},sideCollapsed:{}};
+const uid=()=>Math.random().toString(36).slice(2,10);
+
+// ═══════ STORAGE ═══════
+function save(){try{localStorage.setItem("onus2-p",JSON.stringify(S.prompts))}catch(e){}try{localStorage.setItem("onus2-b",JSON.stringify(S.builder))}catch(e){}try{localStorage.setItem("onus2-m",JSON.stringify(S.masters))}catch(e){}try{localStorage.setItem("onus2-tl",JSON.stringify(S.timeline))}catch(e){}try{localStorage.setItem("onus2-sc",JSON.stringify(S.scores))}catch(e){}}
+function load(){try{const p=localStorage.getItem("onus2-p");if(p){const st=JSON.parse(p);const ids=new Set(st.map(x=>x.id));const miss=INITIAL_PROMPTS.filter(x=>!ids.has(x.id));S.prompts=[...miss,...st];}else S.prompts=[...INITIAL_PROMPTS];}catch(e){S.prompts=[...INITIAL_PROMPTS];}
+try{const b=localStorage.getItem("onus2-b");if(b)S.builder=JSON.parse(b);}catch(e){}
+try{const m=localStorage.getItem("onus2-m");if(m)S.masters=JSON.parse(m);}catch(e){}
+try{const t=localStorage.getItem("onus2-tl");if(t)S.timeline=JSON.parse(t);}catch(e){}
+try{const sc=localStorage.getItem("onus2-sc");if(sc)S.scores=JSON.parse(sc);}catch(e){}}
+
+// ═══════ IMPORT/EXPORT ═══════
+function exportAll(){const d={prompts:S.prompts,builder:S.builder,masters:S.masters,timeline:S.timeline,scores:S.scores,exported:new Date().toISOString()};const b=new Blob([JSON.stringify(d,null,2)],{type:"application/json"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download=`onus-v2-backup-${Date.now()}.json`;a.click();URL.revokeObjectURL(u);toast("Exported all data");}
+function triggerImport(){const i=document.createElement("input");i.type="file";i.accept=".json";i.onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(d.prompts){const ids=new Set(S.prompts.map(x=>x.id));S.prompts=[...d.prompts.filter(x=>!ids.has(x.id)),...S.prompts];}if(d.masters){const ids=new Set(S.masters.map(x=>x.id));S.masters=[...d.masters.filter(x=>!ids.has(x.id)),...S.masters];}save();render();toast(`Imported successfully`);}catch(err){toast("Import failed");}};r.readAsText(f);};i.click();}
+
+// ═══════ TOAST ═══════
+let tt;function toast(m){clearTimeout(tt);let t=document.getElementById("toast");if(!t){t=document.createElement("div");t.id="toast";t.className="toast";document.body.appendChild(t);}t.textContent=m;t.style.display="block";tt=setTimeout(()=>t.style.display="none",2200);}
+
+// ═══════ ACTIONS ═══════
+function switchView(v){S.view=v;S.edit=null;render();updMN();}
+function updMN(){document.querySelectorAll(".mn-b").forEach(b=>b.classList.remove("a"));const b=document.getElementById("mn-"+S.view);if(b)b.classList.add("a");const bg=document.getElementById("mn-badge");if(S.builder.length>0){bg.style.display="inline";bg.textContent=S.builder.length;}else bg.style.display="none";}
+function cp(t,id){navigator.clipboard.writeText(t).then(()=>{S.copied=id;render();toast("Copied");setTimeout(()=>{S.copied=null;render();},1500);}).catch(()=>toast("Copy failed"));}
+function addBld(id){const p=S.prompts.find(x=>x.id===id);if(!p||S.builder.find(x=>x.id===id))return;S.builder.push({...p,builderId:uid()});save();render();updMN();toast(`Added "${p.title}"`);}
+function rmBld(bid){S.builder=S.builder.filter(x=>x.builderId!==bid);save();render();updMN();}
+function mvBld(i,d){const s=i+d;if(s<0||s>=S.builder.length)return;[S.builder[i],S.builder[s]]=[S.builder[s],S.builder[i]];save();render();}
+function compile(){return S.builder.map(b=>{const c=CATEGORIES.find(x=>x.id===b.category);return`--- ${c?.icon||"📝"} ${c?.label||b.category}: ${b.title} ---\n${b.content}`;}).join("\n\n");}
+function saveMaster(){S.masters.unshift({id:uid(),title:`Master — ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`,compiled:compile(),components:S.builder.map(b=>b.title),tags:[...new Set(S.builder.flatMap(b=>b.tags))],created:Date.now()});save();render();toast("Master saved!");}
+function delMaster(id){S.masters=S.masters.filter(x=>x.id!==id);save();render();}
+function delPrompt(id){S.prompts=S.prompts.filter(x=>x.id!==id);S.builder=S.builder.filter(x=>x.id!==id);save();render();}
+function savePrompt(f){const i=S.prompts.findIndex(x=>x.id===f.id);if(i>=0){// Save version history
+const old=S.prompts[i];if(old.content!==f.content){if(!f.versions)f.versions=[];f.versions=[{content:old.content,date:Date.now()},...(f.versions||[]).slice(0,9)];}S.prompts[i]=f;}else{f.versions=[];S.prompts.unshift(f);}S.edit=null;save();render();toast("Saved");}
+function setFil(c){S.cat=(S.cat===c)?"all":c;render();}
+function togTag(t){if(S.tags.includes(t))S.tags=S.tags.filter(x=>x!==t);else S.tags.push(t);render();}
+function clrFil(){S.q="";S.tags=[];S.cat="all";render();}
+function togSide(k){S.sideCollapsed[k]=!S.sideCollapsed[k];render();}
+// Timeline with per-section notes/tags
+function tlAdd(secId){const sec=SECTIONS.find(x=>x.id===secId);if(!sec)return;S.timeline.push({id:uid(),secId:sec.id,notes:"",tags:[]});save();render();}
+function tlRm(id){S.timeline=S.timeline.filter(x=>x.id!==id);save();render();}
+function tlSetNotes(id,val){const t=S.timeline.find(x=>x.id===id);if(t)t.notes=val;save();}
+function tlAddTag(id,tag){const t=S.timeline.find(x=>x.id===id);if(t&&!t.tags.includes(tag)){t.tags.push(tag);save();render();}}
+function tlRmTag(id,tag){const t=S.timeline.find(x=>x.id===id);if(t){t.tags=t.tags.filter(x=>x!==tag);save();render();}}
+function tlOutput(){return S.timeline.map(t=>{const s=SECTIONS.find(x=>x.id===t.secId);if(!s)return"";let out=s.bracket;const extras=[];if(t.tags&&t.tags.length>0)extras.push(t.tags.join(", "));if(t.notes)extras.push(t.notes);if(extras.length>0)out=s.bracket.slice(0,-1)+" — "+extras.join("; ")+"]";return out;}).join("\n");}
+// Claude AI Generation — FULL ONUS SYSTEM
+let API_KEY=localStorage.getItem("onus-api-key")||"";
+function setApiKey(k){API_KEY=k;localStorage.setItem("onus-api-key",k);}
+const ONUS_SYSTEM=`You are ONUS — a hit-song prompt engineer trained on psychoacoustics, cultural authenticity research, platform tag taxonomies, frequency-based production science, and Suno prompt engineering.
+
+YOUR OUTPUT CONTRACT (ALWAYS follow this exact structure):
+Return a JSON object with these exact keys:
+{
+  "title": "Short song title/concept name",
+  "lyrics_prompt": "Full written lyrics with [Square Brackets] for section labels and arrangement/performance notes. Use (parentheses) for background vocals/call-and-response. Use *asterisks* for SFX. This must be COMPLETE PERFORMABLE LYRICS, not a description.",
+  "style_prompt": "One single line: ordered tag chain (most important first), with BPM + Key. 10-18 tokens, mostly one-word tags. Repeat critical tags to weight them.",
+  "alt_style_1": "Quick one-line variant style prompt for A/B testing",
+  "alt_style_2": "Second quick one-line variant style prompt",
+  "vocal_direction": "Detailed vocal delivery instructions — voice character, cadence rules, ad-lib architecture, breath/space, mix positioning. NOT generic.",
+  "arrangement_notes": "Instrument roles, section behaviors, dynamic build, spectral allocation per section.",
+  "tags": ["array","of","relevant","tags"]
+}
+
+RULES YOU MUST FOLLOW:
+- NO ARTIST NAMES anywhere. Convert any artist/song references into: era, subgenre, regional feel, vocal qualities, instrumentation, groove, mix character.
+- HOOK-FIRST: Chorus must be short, loopable, instantly replayable. 2-4 lines, singable, crowd-chantable. 8-12 sec replay value.
+- LYRICS must be fully written original lyrics with section tags, NOT a concept description. Every verse, chorus, bridge fully written out.
+- Use [Square Brackets] for sections: [Intro] [Verse 1] [Pre-Chorus] [Chorus] [Verse 2] [Bridge] [Outro] [Drum Fill] [Ad libs]
+- Use (parentheses) for background vocals/call-and-response lines
+- STYLE PROMPT is ONE LINE of tags. Order matters — most defining tag first. Include BPM + Key.
+- CULTURE-CURRENT language. Default 2020s/now unless throwback requested.
+- AUTHENTICITY over forced slang. Natural voice. No stereotypes or caricatures.
+- For RAP: hard-bias toward talk-rap. No melody drift. Staccato delivery. Anti-sing controls.
+- For SOUTHERN SOUL: default 92-104 BPM, warm major/minor shifts, gospel-tinged chords, live-band feel, Rhodes/EP, handclaps/tambourine, group call-and-response.
+- Hook engineering: design hooks using processing fluency (short, repeatable, compressible for memory) + optimal differentiation (distinctive enough to recognize in 3 seconds).
+- Frequency-first thinking: plan spectral allocation per section. Vocal presence in 2-5kHz. Sub-bass as behavioral lever for movement. Control masking so hook cuts through.
+- Section legibility: track should communicate verse vs pre vs chorus even without vocal. Dynamics must give the song somewhere to grow.
+- Every recommendation must connect to a psychological or psychoacoustic reason.
+
+Return ONLY valid JSON, no markdown fences, no explanation text before or after.`;
+
+async function aiGenerate(description){
+if(!API_KEY){toast("Set your API key first");return null;}
+try{
+const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":API_KEY,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,system:ONUS_SYSTEM,messages:[{role:"user",content:description}]})});
+if(!res.ok){const err=await res.json().catch(()=>({}));toast("API error: "+(err.error?.message||res.status));return null;}
+const data=await res.json();
+const text=data.content.map(c=>c.text||"").join("");
+const clean=text.replace(/```json|```/g,"").trim();
+return JSON.parse(clean);
+}catch(e){toast("Generation failed: "+e.message);return null;}}
+
+// Save as structured master with separated blocks
+function saveMasterFromAI(result){
+const masterPrompt={
+id:uid(),
+title:result.title||("Master — "+new Date().toLocaleDateString()),
+category:"master",
+tags:result.tags||[],
+content:"=== LYRICS PROMPT ===\n"+result.lyrics_prompt+"\n\n=== STYLE PROMPT ===\n"+result.style_prompt+"\n\n=== ALT STYLE 1 ===\n"+result.alt_style_1+"\n\n=== ALT STYLE 2 ===\n"+result.alt_style_2+"\n\n=== VOCAL DIRECTION ===\n"+result.vocal_direction+"\n\n=== ARRANGEMENT ===\n"+result.arrangement_notes,
+rating:5,created:Date.now(),versions:[],
+// Store structured parts for individual copy
+_parts:{lyrics:result.lyrics_prompt,style:result.style_prompt,alt1:result.alt_style_1,alt2:result.alt_style_2,vocal:result.vocal_direction,arrangement:result.arrangement_notes}
+};
+S.prompts.unshift(masterPrompt);
+// Also save individual blocks to library
+const blocks=[
+{title:result.title+" — Lyrics",category:"lyrics",content:result.lyrics_prompt,tags:result.tags||[]},
+{title:result.title+" — Style",category:"style",content:result.style_prompt,tags:result.tags||[]},
+{title:result.title+" — Vocal Direction",category:"vocal",content:result.vocal_direction,tags:result.tags||[]},
+{title:result.title+" — Arrangement",category:"arrangement",content:result.arrangement_notes,tags:result.tags||[]},
+];
+blocks.forEach(b=>{S.prompts.unshift({id:uid(),...b,rating:4,created:Date.now(),versions:[]});});
+// Also save to masters list
+S.masters.unshift({id:uid(),title:result.title||"AI Master",compiled:masterPrompt.content,components:blocks.map(b=>b.title),tags:result.tags||[],created:Date.now()});
+save();render();toast("Saved master + "+blocks.length+" blocks to Library!");}
+// Scorecard
+function setScore(k,v){S.scores[k]=v;save();render();}
+function totalScore(){const vals=Object.values(S.scores);return Math.round(vals.reduce((a,b)=>a+b,0)/vals.length*10);}
+function scoreColor(v){if(v>=8)return"var(--green)";if(v>=5)return"#f1c40f";return"var(--red)";}
+
+// ═══════ FILTERED ═══════
+function getF(){return S.prompts.filter(p=>{if(S.cat!=="all"&&p.category!==S.cat)return false;if(S.tags.length>0&&!S.tags.some(t=>p.tags.includes(t)))return false;if(S.q){const q=S.q.toLowerCase();return p.title.toLowerCase().includes(q)||p.content.toLowerCase().includes(q)||p.tags.some(t=>t.toLowerCase().includes(q));}return true;});}
+
+// ═══════ RENDER HELPERS ═══════
+function h(tag,a,...ch){const el=document.createElement(tag);if(a)Object.entries(a).forEach(([k,v])=>{if(k==="className")el.className=v;else if(k==="style"&&typeof v==="object")Object.assign(el.style,v);else if(k.startsWith("on"))el.addEventListener(k.slice(2).toLowerCase(),v);else el.setAttribute(k,v);});ch.flat(9).forEach(c=>{if(c==null)return;el.appendChild(typeof c==="string"?document.createTextNode(c):c);});return el;}
+
+function renderCard(p){
+const cat=CATEGORIES.find(c=>c.id===p.category);const inB=S.builder.some(b=>b.id===p.id);
+const contentEl=h("pre",{className:"cd-c"},p.content);
+const isLong=p.content.length>200;
+let expanded=false;
+const expandBtn=isLong?h("button",{className:"cd-expand",onClick:()=>{expanded=!expanded;contentEl.classList.toggle("expanded");expandBtn.textContent=expanded?"▲ Collapse":"▼ View Full";}},"▼ View Full"):null;
+const verCount=(p.versions||[]).length;
+const card=h("div",{className:"cd"},[
+h("div",{className:"cd-h"},[h("span",{className:"cd-dot",style:{backgroundColor:cat?.color||"#888"}},cat?.icon||""),h("span",{className:"cd-cl"},cat?.label||""),verCount>0?h("span",{className:"vb"},"v"+(verCount+1)):null,h("div",{className:"cd-act"},[h("button",{className:"ib",onClick:()=>{S.edit={...p,tags:[...(p.tags||[])]};render();}},"\u270F\uFE0F"),h("button",{className:"ib",onClick:()=>delPrompt(p.id)},"\uD83D\uDDD1\uFE0F")])]),
+h("div",{className:"cd-t"},p.title),
+h("div",{className:"cd-tags"},(p.tags||[]).map(t=>h("span",{className:"mt"},t))),
+contentEl,
+expandBtn,
+// Version history
+verCount>0?(() =>{const det=h("details",{className:"vh"});det.append(h("summary",{},"📜 "+verCount+" previous version"+(verCount>1?"s":"")));(p.versions||[]).forEach(v=>{det.append(h("div",{className:"vh-item"},[h("span",{className:"vh-date"},new Date(v.date).toLocaleDateString()),v.content.slice(0,80)+"..."]));});return det;})():null,
+h("div",{className:"cd-f"},[h("button",{className:"ab"+(S.copied===p.id?" d":""),onClick:()=>cp(p.content,p.id)},S.copied===p.id?"✓ Copied":"📋 Copy"),h("button",{className:"ab"+(inB?" dm":" g"),onClick:()=>addBld(p.id)},inB?"✓ In Builder":"⚡ Builder")])
+].filter(Boolean));
+return card;}
+
+function renderForm(p){
+let f={...p,tags:[...(p.tags||[])]};
+const c=h("div",{className:"fo"});
+function redraw(){c.innerHTML="";
+c.append(
+h("div",{className:"fo-t"},f.title?"Edit Prompt":"New Prompt"),
+h("div",{className:"fo-g2"},[
+h("div",{className:"fg"},[h("label",{className:"fl"},"Title"),h("input",{className:"fi",value:f.title,onInput:e=>{f.title=e.target.value;}})]),
+h("div",{className:"fg"},[h("label",{className:"fl"},"Category"),(()=>{const s=h("select",{className:"fsel",onChange:e=>{f.category=e.target.value;}});CATEGORIES.forEach(cat=>{const o=h("option",{value:cat.id},cat.icon+" "+cat.label);if(cat.id===f.category)o.selected=true;s.append(o);});return s;})()]),
+]),
+h("div",{className:"fg"},[h("label",{className:"fl"},"Content"),h("textarea",{className:"fta",rows:"6",onInput:e=>{f.content=e.target.value;}},f.content)]),
+h("div",{className:"fg"},[h("label",{className:"fl"},"Tags"),
+h("div",{className:"tir"},[
+(()=>{const inp=h("input",{className:"fi",style:{flex:"1"},placeholder:"Add tag + Enter"});inp.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();const t=inp.value.trim().toLowerCase();if(t&&!f.tags.includes(t))f.tags.push(t);inp.value="";redraw();}});return inp;})(),
+h("button",{className:"atb"},"+")]),
+h("div",{className:"tc",style:{marginTop:"6px"}},f.tags.map(t=>h("span",{className:"mt",style:{cursor:"pointer"},onClick:()=>{f.tags=f.tags.filter(x=>x!==t);redraw();}},t+" ✕"))),
+// Full tag palette by category
+...Object.entries(TAG_PALETTE).map(([catName,tags])=>h("div",{className:"tp-section"},[
+h("div",{className:"tp-label"},catName),
+h("div",{className:"tc"},tags.filter(t=>!f.tags.includes(t)).slice(0,catName==="Genre"?50:catName==="Instruments"?50:20).map(t=>h("button",{className:"qt",onClick:()=>{f.tags.push(t);redraw();}},"+"+t)))
+]))
+]),
+h("div",{className:"fa"},[
+h("button",{className:"ob",onClick:()=>{S.edit=null;render();}},"Cancel"),
+h("button",{className:"gb",style:{opacity:(f.title&&f.content)?1:0.4},onClick:()=>{if(f.title&&f.content)savePrompt(f);}},"💾 Save"),
+]));
+}redraw();return c;}
+
+// ═══════ MAIN RENDER ═══════
+function render(){
+const app=document.getElementById("app");app.innerHTML="";
+// Header
+app.append(h("header",{className:"hdr"},[
+h("div",{className:"hdr-l"},[h("div",{className:"logo"},"⚡"),h("div",{},[h("div",{className:"logo-t"},["ONUS ",h("span",{className:"logo-a"},"PromptLab")]),h("div",{className:"logo-sub"},"Build · Store · Fuse · Score · Deploy")])]),
+h("nav",{className:"nav"},["library","timeline","ai","builder","scorecard","saved"].map(k=>{const labels={library:"📚 Library",timeline:"🎼 Timeline",ai:"🤖 AI Generate",builder:"🔧 Builder",scorecard:"📊 Scorecard",saved:"⚡ Masters"};const btn=h("button",{className:"nb"+(S.view===k?" a":""),onClick:()=>switchView(k)},labels[k]);if(k==="builder"&&S.builder.length>0)btn.append(h("span",{className:"bdg"},String(S.builder.length)));return btn;}))
+]));
+
+// ═══ LIBRARY ═══
+if(S.view==="library"){
+const fl=getF();const cc={};CATEGORIES.forEach(c=>cc[c.id]=S.prompts.filter(p=>p.category===c.id).length);
+function sideSection(key,label,content){
+const collapsed=S.sideCollapsed[key];
+return h("div",{className:"ss"},[
+h("div",{className:"ss-toggle",onClick:()=>togSide(key)},[h("div",{className:"sl"},label),h("span",{className:"ss-arrow"},collapsed?"▶":"▼")]),
+h("div",{className:"ss-body"+(collapsed?" collapsed":"")},content)
+]);}
+const side=h("aside",{className:"side"},[
+h("button",{className:"nbtn",onClick:()=>{S.edit={id:uid(),title:"",category:"lyrics",tags:[],content:"",rating:3,created:Date.now(),versions:[]};render();}},"+ New Prompt"),
+sideSection("cats","Categories",[
+h("button",{className:"cb"+(S.cat==="all"?" a":""),onClick:()=>setFil("all")},["📁 All ",h("span",{className:"cc"},String(S.prompts.length))]),
+...CATEGORIES.map(c=>h("button",{className:"cb"+(S.cat===c.id?" a":""),onClick:()=>setFil(c.id)},[c.icon+" "+c.label+" ",h("span",{className:"cc"},String(cc[c.id]||0))]))]),
+sideSection("genre","Genre",[h("div",{className:"tc"},GENRE_TAGS.slice(0,25).map(t=>h("button",{className:"tp"+(S.tags.includes(t)?" a":""),onClick:()=>togTag(t)},t)))]),
+sideSection("mood","Mood",[h("div",{className:"tc"},MOOD_TAGS.map(t=>h("button",{className:"tp"+(S.tags.includes(t)?" a":""),onClick:()=>togTag(t)},t)))]),
+sideSection("inst","Instruments",[h("div",{className:"tc"},TAG_PALETTE.Instruments.slice(0,20).map(t=>h("button",{className:"tp"+(S.tags.includes(t)?" a":""),onClick:()=>togTag(t)},t)))]),
+sideSection("vocal","Vocals",[h("div",{className:"tc"},TAG_PALETTE.Vocals.slice(0,15).map(t=>h("button",{className:"tp"+(S.tags.includes(t)?" a":""),onClick:()=>togTag(t)},t)))]),
+h("div",{className:"stb",style:{marginTop:"8px"}},[
+h("div",{className:"sr"},[h("span",{className:"sr-l"},"Prompts"),h("span",{className:"sr-v"},String(S.prompts.length))]),
+h("div",{className:"sr"},[h("span",{className:"sr-l"},"Builder"),h("span",{className:"sr-v"},String(S.builder.length))]),
+h("div",{className:"sr"},[h("span",{className:"sr-l"},"Masters"),h("span",{className:"sr-v"},String(S.masters.length))]),
+h("div",{className:"sr"},[h("span",{className:"sr-l"},"Hit Score"),h("span",{className:"sr-v"},totalScore()+"/100")]),
+])
+]);
+const si=h("input",{className:"sin",placeholder:"Search prompts, tags...",value:S.q});si.addEventListener("input",e=>{S.q=e.target.value;render();});
+const cnt=h("section",{className:"cnt"},[
+h("div",{className:"io"},[h("button",{className:"iob",onClick:exportAll},"📤 Export"),h("button",{className:"iob",onClick:triggerImport},"📥 Import")]),
+h("div",{className:"sbar"},[si,(S.q||S.tags.length>0||S.cat!=="all")?h("button",{className:"clr",onClick:clrFil},"Clear"):null].filter(Boolean)),
+S.edit?renderForm(S.edit):null,
+h("div",{className:"grid"},fl.length>0?fl.map(renderCard):[h("div",{className:"emp"},[h("div",{className:"emp-i"},"🔍"),h("div",{className:"emp-t"},"No prompts match")])])
+].filter(Boolean));
+app.append(h("div",{className:"main"},[side,cnt]));}
+
+// ═══ TIMELINE ═══
+if(S.view==="timeline"){
+const w=h("div",{className:"bw"});
+w.append(h("div",{className:"bt"},"🎼 Song Structure Timeline"),h("div",{className:"bsub"},"Build your song structure. Tap sections to add, then expand each to add lyric cues, vocal tags, and arrangement notes."));
+const tlW=h("div",{className:"tl-wrap"});
+tlW.append(h("div",{className:"tl-title"},"Your Structure"));
+const track=h("div",{className:"tl-track"});
+if(S.timeline.length===0)track.append(h("span",{style:{color:"var(--tx3)",fontSize:"11px",padding:"4px"}},"Tap sections below to build..."));
+else S.timeline.forEach(t=>{const sec=SECTIONS.find(x=>x.id===t.secId);if(!sec)return;track.append(h("div",{className:"tl-block",style:{background:sec.color+"22",color:sec.color,border:"1px solid "+sec.color+"44"}},[sec.label,h("span",{className:"tl-x",onClick:()=>tlRm(t.id)},"✕")]));});
+tlW.append(track);
+// Per-section detail editors
+if(S.timeline.length>0){
+S.timeline.forEach((t,i)=>{const sec=SECTIONS.find(x=>x.id===t.secId);if(!sec)return;
+const det=h("details",{className:"vh",style:{marginBottom:"8px"}});
+det.append(h("summary",{style:{fontSize:"11px",fontWeight:"700",color:sec.color,cursor:"pointer",padding:"4px 0"}},(i+1)+". "+sec.label+" — tap to add cues"));
+const inner=h("div",{style:{padding:"8px",background:"rgba(0,0,0,0.15)",borderRadius:"8px",marginTop:"4px"}});
+const notesInput=h("textarea",{className:"fta",rows:"2",placeholder:"Lyric cues, vocal direction, arrangement notes for this "+sec.label+"...",style:{fontSize:"10px",marginBottom:"6px"}},t.notes||"");
+notesInput.addEventListener("input",e=>tlSetNotes(t.id,e.target.value));
+inner.append(h("div",{className:"fl"},"Notes / Cues"),notesInput);
+inner.append(h("div",{className:"fl",style:{marginTop:"4px"}},"Quick Tags"));
+const secTags=["vocal-forward","bass-heavy","stripped","full-band","ad-libs","call-and-response","handclaps","crowd-chant","build-energy","drop-energy","intimate","anthemic","preacher-style","talk-rap","croon","harmonies"];
+inner.append(h("div",{className:"tc"},secTags.map(tag=>h("button",{className:"qt"+((t.tags||[]).includes(tag)?" a":""),style:(t.tags||[]).includes(tag)?{background:"var(--gold-dim)",color:"var(--gold)",borderColor:"var(--gold-b)"}:{},onClick:()=>{if((t.tags||[]).includes(tag))tlRmTag(t.id,tag);else tlAddTag(t.id,tag);}},((t.tags||[]).includes(tag)?"✓ ":"+ ")+tag))));
+det.append(inner);
+tlW.append(det);});
+const out=tlOutput();
+tlW.append(h("div",{className:"tl-output"},out));
+tlW.append(h("div",{style:{display:"flex",gap:"6px",marginTop:"6px"}},[
+h("button",{className:"gb",onClick:()=>cp(out,"tl")},S.copied==="tl"?"✓ Copied!":"📋 Copy Structure"),
+h("button",{className:"ob",onClick:()=>{S.timeline=[];save();render();}},"🗑️ Clear"),
+]));}
+tlW.append(h("div",{className:"tl-sub",style:{marginTop:"10px"}},"Tap to add:"));
+tlW.append(h("div",{className:"tl-palette"},SECTIONS.map(s=>h("button",{className:"tl-add",onClick:()=>tlAdd(s.id)},s.label))));
+w.append(tlW);
+// Quick templates
+w.append(h("div",{className:"tl-wrap"},[
+h("div",{className:"tl-title"},"Quick Templates"),
+h("div",{className:"tl-sub"},"One-tap song structures"),
+h("div",{style:{display:"flex",flexWrap:"wrap",gap:"6px"}},[
+["Pop Standard","intro,verse,prechorus,chorus,verse,prechorus,chorus,bridge,chorus,outro"],
+["Rap (Verse Heavy)","intro,verse,chorus,verse,chorus,verse,chorus,outro"],
+["Soul/R&B Vamp","intro,verse,prechorus,chorus,verse,chorus,bridge,vamp,outro,fadeout"],
+["EDM Drop","intro,buildup,drop,breakdown,buildup,drop,outro"],
+["Ballad","intro,verse,verse,chorus,verse,chorus,bridge,chorus,fadeout"],
+].map(([name,secs])=>h("button",{className:"ob",onClick:()=>{S.timeline=secs.split(",").map(id=>({id:uid(),secId:id,notes:"",tags:[]}));save();render();}},name)))
+]));
+app.append(w);}
+
+// ═══ AI GENERATE ═══
+if(S.view==="ai"){
+const w=h("div",{className:"bw"});
+w.append(h("div",{className:"bt"},"🤖 ONUS AI — Full Prompt Generator"),h("div",{className:"bsub"},"Describe your song. ONUS generates complete lyrics, style prompt, alt styles, vocal direction, and arrangement — all separated and copyable. Saves directly to your Library as a Master Prompt."));
+// API Key setup
+const hasKey=API_KEY&&API_KEY.length>10;
+const keySection=h("div",{className:"tl-wrap",style:{marginBottom:"14px"}});
+keySection.append(h("div",{className:"tl-title"},hasKey?"✅ API Key Set (~$0.02/generation)":"🔑 API Key Required"));
+if(!hasKey){
+keySection.append(h("div",{style:{fontSize:"11px",color:"var(--tx2)",marginBottom:"8px",lineHeight:"1.7"}},"5-minute setup: Go to console.anthropic.com → Sign up → API Keys → Create Key → Copy the sk-ant-... key → Paste below. $5 free credit = ~200 generations."));
+const keyInput=h("input",{className:"fi",placeholder:"Paste your sk-ant-... key here",type:"password"});
+keySection.append(h("div",{className:"tir"},[keyInput,h("button",{className:"gb",onClick:()=>{const v=keyInput.value.trim();if(v.startsWith("sk-")){setApiKey(v);render();toast("API key saved!");}else toast("Key must start with sk-");}},"Save Key")]));
+}else{
+keySection.append(h("div",{style:{display:"flex",gap:"6px",alignItems:"center"}},[
+h("span",{style:{fontSize:"11px",color:"var(--green)"}},"Key: "+API_KEY.slice(0,10)+"..."),
+h("button",{className:"ob",style:{fontSize:"10px",padding:"4px 10px"},onClick:()=>{setApiKey("");render();}},"Change Key"),
+]));}
+w.append(keySection);
+// Generation input
+const genSection=h("div",{className:"tl-wrap"});
+genSection.append(h("div",{className:"tl-title"},"Describe Your Song"));
+const descInput=h("textarea",{className:"fta",rows:"5",placeholder:"Be specific about: genre/subgenre, mood, tempo, vocal style, lyric theme, instrumentation, arrangement feel, era, mix character.\n\nExample: Timeless southern soul cookout anthem — Frankie Beverly warmth meets Charlie Wilson fire. Crowd singalong chorus, live band, grown-folk love lyrics about gratitude and loyalty. Preacher-style bridge that builds to a praise break. Mid-tempo ~100 BPM, warm analog feel, Rhodes, horns, handclaps."});
+genSection.append(descInput);
+const resultArea=h("div",{id:"ai-results"});
+const genBtn=h("button",{className:"gb",style:{marginTop:"10px",width:"100%",padding:"14px",fontSize:"15px",fontWeight:"800",letterSpacing:"1px"},onClick:async()=>{
+const desc=descInput.value.trim();if(!desc){toast("Describe your song first");return;}
+genBtn.textContent="⏳ ONUS is writing your hit...";genBtn.disabled=true;
+const result=await aiGenerate(desc);
+genBtn.textContent="⚡ GENERATE FULL PROMPT";genBtn.disabled=false;
+if(!result||typeof result!=="object"){resultArea.innerHTML="";return;}
+resultArea.innerHTML="";
+resultArea.append(h("div",{style:{fontSize:"14px",fontWeight:"800",color:"var(--gold)",margin:"16px 0 10px"}},"✅ "+( result.title||"Your Song")+" — Complete ONUS Prompt"));
+// Section renderer helper
+function resultBlock(label,icon,content,copyId,color){
+return h("div",{className:"bc",style:{marginBottom:"10px",borderLeft:"3px solid "+color}},[
+h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"6px"}},[
+h("div",{style:{fontSize:"12px",fontWeight:"700",color:color}},icon+" "+label),
+h("button",{className:"gb",style:{fontSize:"10px",padding:"4px 12px"},onClick:()=>cp(content,copyId)},S.copied===copyId?"✓":"📋 Copy"),
+]),
+h("pre",{className:"bc-c",style:{maxHeight:"250px",overflow:"auto",whiteSpace:"pre-wrap"}},content),
+]);}
+// Render each section
+resultArea.append(resultBlock("LYRICS PROMPT","🎤",result.lyrics_prompt||"(no lyrics generated)","ai-lyrics","#D4AF37"));
+resultArea.append(resultBlock("STYLE PROMPT","🎛️",result.style_prompt||"(no style generated)","ai-style","#C0392B"));
+resultArea.append(resultBlock("ALT STYLE 1","🎛️",result.alt_style_1||"","ai-alt1","#E67E22"));
+resultArea.append(resultBlock("ALT STYLE 2","🎛️",result.alt_style_2||"","ai-alt2","#E67E22"));
+resultArea.append(resultBlock("VOCAL DIRECTION","🗣️",result.vocal_direction||"","ai-vocal","#E67E22"));
+resultArea.append(resultBlock("ARRANGEMENT","📐",result.arrangement_notes||"","ai-arr","#9B59B6"));
+// Tags
+if(result.tags&&result.tags.length>0){
+resultArea.append(h("div",{className:"cd-tags",style:{marginBottom:"10px"}},(result.tags||[]).map(t=>h("span",{className:"mt"},t))));}
+// Action buttons
+resultArea.append(h("div",{style:{display:"flex",gap:"8px",flexWrap:"wrap",marginTop:"10px"}},[
+h("button",{className:"gb",style:{flex:"1",padding:"12px",fontSize:"13px",fontWeight:"800"},onClick:()=>{saveMasterFromAI(result);}},"💾 Save All to Library + Masters"),
+h("button",{className:"gb",style:{flex:"1",padding:"12px",fontSize:"13px"},onClick:()=>{const full="LYRICS PROMPT\n"+result.lyrics_prompt+"\n\nSTYLE PROMPT\n"+result.style_prompt+"\n\nALT STYLES\n1) "+result.alt_style_1+"\n2) "+result.alt_style_2;cp(full,"ai-full");}},"📋 Copy Full (Lyrics+Style+Alts)"),
+]));}},
+"⚡ GENERATE FULL PROMPT");
+genSection.append(genBtn);
+genSection.append(resultArea);
+w.append(genSection);
+// Examples
+w.append(h("div",{className:"tl-wrap"},[
+h("div",{className:"tl-title"},"Example Descriptions — tap to load"),
+...["Timeless southern soul cookout anthem — warm reunion groove, crowd singalong chorus, live band, grown-folk love lyrics about gratitude and loyalty, preacher-style bridge, mid-tempo ~100 BPM, Rhodes, horns, handclaps, analog feel",
+"Bay Area staccato rap — trunk-rattle bass, hustler wisdom lyrics, comedic punchlines, nasal animated vocal, choppy stop-start flow, hyphy-adjacent, game-talk, 92 BPM",
+"Modern R&B slow jam — Frankie Beverly warmth meets Charlie Wilson fire, gospel-tinged, testimony energy, new-jack polish, intimate vocal, crowd-ready chorus, grown romance, 84 BPM",
+"Neo-soul healing anthem — jazz chords, live drums, Rhodes, female vocal with gospel runs, theme of redemption and gratitude, 98 BPM, warm wide mix",
+"Country-soul crossover — acoustic guitar meets southern soul horns, narrative about small-town love and endurance, singalong chorus, warm tape feel, 96 BPM"
+].map(ex=>h("button",{className:"ob",style:{textAlign:"left",marginBottom:"6px",fontSize:"11px",lineHeight:"1.5",whiteSpace:"normal"},onClick:()=>{descInput.value=ex;}},ex))
+]));
+app.append(w);}
+
+// ═══ BUILDER ═══
+if(S.view==="builder"){
+const w=h("div",{className:"bw"});
+w.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"16px",flexWrap:"wrap",gap:"8px"}},[h("div",{},[h("div",{className:"bt"},"⚡ Prompt Builder"),h("div",{className:"bsub"},"Combine blocks into a Master Prompt.")]),h("button",{className:"ob",onClick:()=>switchView("library")},"+ Add from Library")]));
+if(S.builder.length===0){w.append(h("div",{className:"emp",style:{padding:"70px 16px"}},[h("div",{className:"emp-i"},"🔧"),h("div",{className:"emp-t"},["Empty. Go to Library → ",h("strong",{},"⚡ Builder")])]));}
+else{S.builder.forEach((b,i)=>{const cat=CATEGORIES.find(c=>c.id===b.category);w.append(h("div",{className:"bc"},[h("div",{className:"bc-top"},[h("span",{className:"bc-idx"},String(i+1)),h("span",{className:"cd-dot",style:{backgroundColor:cat?.color||"#888",marginRight:"4px"}},cat?.icon||""),h("span",{className:"bc-t"},b.title),h("div",{style:{marginLeft:"auto",display:"flex",gap:"3px"}},[h("button",{className:"mbtn",onClick:()=>mvBld(i,-1)},"▲"),h("button",{className:"mbtn",onClick:()=>mvBld(i,1)},"▼"),h("button",{className:"mbtn dg",onClick:()=>rmBld(b.builderId)},"✕")])]),h("pre",{className:"bc-c"},b.content)]));});
+const comp=compile();const wc=comp.split(/\s+/).length;
+w.append(h("div",{className:"cps"},[h("div",{className:"cp-h"},[h("div",{className:"cp-t"},"📝 Compiled Master"),h("div",{style:{display:"flex",gap:"6px",flexWrap:"wrap"}},[h("button",{className:"gb",onClick:()=>cp(comp,"master")},S.copied==="master"?"✓ Copied!":"📋 Copy"),h("button",{className:"gb",onClick:saveMaster},"💾 Save")])]),h("pre",{className:"cp-txt"},comp),h("div",{className:"cp-m"},[h("span",{},`${S.builder.length} blocks · ~${wc} words · ${comp.length} chars`),h("span",{},"Tags: "+[...new Set(S.builder.flatMap(b=>b.tags))].slice(0,8).join(", "))])]));}
+app.append(w);}
+
+// ═══ SCORECARD ═══
+if(S.view==="scorecard"){
+const w=h("div",{className:"bw"});
+w.append(h("div",{className:"bt"},"📊 Hit Scorecard"),h("div",{className:"bsub"},"Rate your current prompt/track against 8 psychoacoustic hit criteria. Slide each to score 0–10."));
+const scW=h("div",{className:"sc-wrap"});
+SCORE_CRITERIA.forEach(cr=>{const val=S.scores[cr.id]||0;
+const slider=h("input",{type:"range",min:"0",max:"10",value:String(val),style:{flex:"1",accentColor:"var(--gold)"}});
+slider.addEventListener("input",e=>setScore(cr.id,parseInt(e.target.value)));
+scW.append(h("div",{className:"sc-row"},[
+h("div",{className:"sc-label"},cr.label),
+slider,
+h("div",{className:"sc-val",style:{color:scoreColor(val)}},String(val)),
+]));});
+const tot=totalScore();
+scW.append(h("div",{className:"sc-total"},[h("div",{className:"sc-total-label"},"Overall Hit Score"),h("div",{className:"sc-total-val",style:{color:tot>=85?"var(--green)":tot>=60?"#f1c40f":"var(--red)"}},tot+"/100")]));
+if(tot<85){scW.append(h("div",{style:{marginTop:"12px",padding:"12px",borderRadius:"8px",background:"rgba(231,76,60,0.08)",border:"1px solid rgba(231,76,60,0.15)",fontSize:"12px",color:"var(--tx2)"}},[h("strong",{style:{color:"var(--red)"}},"Below 85 — Areas to improve: "),Object.entries(S.scores).filter(([k,v])=>v<7).map(([k])=>SCORE_CRITERIA.find(c=>c.id===k)?.label).filter(Boolean).join(", ")||"All criteria are at 7+, refine further."]));}
+w.append(scW);
+// Legend
+w.append(h("div",{className:"sc-wrap",style:{marginTop:"12px"}},[h("div",{style:{fontSize:"12px",fontWeight:"700",color:"#fff",marginBottom:"8px"}},"Criteria Guide"),...SCORE_CRITERIA.map(cr=>h("div",{style:{marginBottom:"6px"}},[h("span",{style:{fontWeight:"700",color:"var(--gold)",fontSize:"11px"}},cr.label+": "),h("span",{style:{fontSize:"11px",color:"var(--tx2)"}},cr.desc)]))]));
+app.append(w);}
+
+// ═══ MASTERS ═══
+if(S.view==="saved"){
+const w=h("div",{className:"mw"},[h("div",{className:"bt"},"⚡ Saved Masters"),h("div",{className:"bsub"},"Ready to deploy anywhere.")]);
+if(S.masters.length===0)w.append(h("div",{className:"emp",style:{padding:"70px 16px"}},[h("div",{className:"emp-i"},"⚡"),h("div",{className:"emp-t"},"No masters yet.")]));
+else S.masters.forEach(m=>{const det=h("details",{style:{marginTop:"8px"}});det.append(h("summary",{className:"mc-sum"},"View full prompt"),h("pre",{className:"cp-txt"},m.compiled));
+w.append(h("div",{className:"mc"},[h("div",{className:"mc-top"},[h("div",{className:"mc-t"},m.title),h("div",{style:{display:"flex",gap:"6px"}},[h("button",{className:"gb",onClick:()=>cp(m.compiled,m.id)},S.copied===m.id?"✓ Copied!":"📋 Copy"),h("button",{className:"ob",onClick:()=>delMaster(m.id)},"🗑️")])]),h("div",{className:"mc-m"},`${m.components.length} blocks · ${new Date(m.created).toLocaleDateString()}`),h("div",{className:"cd-tags"},(m.tags||[]).slice(0,10).map(t=>h("span",{className:"mt"},t))),det]));});
+app.append(w);}
+
+updMN();}
+
+// ═══════ INIT ═══════
+load();render();
+</script>
 </body>
 </html>
