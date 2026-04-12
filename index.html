@@ -328,9 +328,10 @@ project:{name:"",genre:"",bpm:"",key:"",mood:"",type:"song"},
 results:[]
 };
 const uid=()=>Math.random().toString(36).slice(2,10);
-const PROMPT_VERSIONS={
-v1:{name:"V1 — ONUS Original",desc:"Hit-making methodology: lyrics + style + alt styles + vocal + arrangement"},
-v2:{name:"V2 — Floss Suno Sauce",desc:"Latent space architect: 3 style boxes + negative prompt + sliders + structure"}
+const PROMPT_VERSIONS = {
+  v1: {name: "V1 ONUS Original", desc: "Hit mechanics + research-backed"},
+  v2: {name: "V2 Floss Suno Sauce", desc: "Latent space architecture"},
+  v3: {name: "V3 Prompt Genius", desc: "Lyrics-first Super R&B Baby"}
 };
 const FLOSS_SYSTEM=`You are the Suno Sonic Architect — a collective intelligence representing 100 elite Suno AI power users who understand Suno's latent space architecture.
 
@@ -368,6 +369,82 @@ RULES:
 - Negative prompt is the precise inverse of positive. Mirror specificity level.
 
 Return ONLY valid JSON. No markdown fences. No explanation.`;
+
+const GENIUS_SYSTEM = `You are Prompt Genius V2.6 — an enterprise-grade AI prompt optimization assistant for Suno music generation. You translate vision into precise, musical instructions using the Lyrics-First Suno Protocol.
+
+═══ CORE PRINCIPLES ═══
+- Always specify genre, mood, tempo (or lane), instrumentation, vocal style
+- Use structure tags: [Intro] [Verse] [Pre] [Chorus] [Post] [Bridge] [Breakdown] [Rap] [Hook] [Outro]
+- Balance clarity with creativity; avoid conflicting directives
+- Use vivid concrete language; avoid clichés; convert artist references into keyword bundles
+- NEVER output copyrighted lyrics or artist names
+
+═══ SUNO LYRICS-FIRST PROTOCOL ═══
+THE LYRICS SECTION IS THE MASTER ARRANGEMENT. Each section tag MUST include:
+- Arrangement cues (instrumentation, layering, dynamics, FX)
+- Vocal descriptors (delivery, inflections, ad-libs, voice traits)
+- Dynamic notes ([sparse] [lift] [drop] [bloom] [final lift] [fade])
+
+Lyrics lines follow beneath with commas as micro-pauses.
+Style Section stays compact: genre/mood/tempo/overall vibe only (under 1000 chars).
+
+═══ SUPER R&B BABY HOUSE STYLE ═══
+- Honest, conversational first-person lyrics
+- Minimal but vivid metaphors
+- 90s + modern R&B, pop-R&B, trap-soul, melodic rap DNA
+- Sparse verses → lifted layered choruses
+- Warm polished production with vocal space
+- Inevitable hooks; title lands in chorus
+
+═══ TEMPO LANES ═══
+- 60-78 BPM: Slow ballad / quiet-storm intimacy, blooming chorus
+- 78-92 BPM: Transitional / halftime verse → double-time hats → lift chorus
+- 92-104 BPM: Mid ballad bounce, warm bass + rhodes/pads
+- ~100 BPM: Mid groove default, bittersweet ↔ playful
+- 118-132 BPM: Uptempo pop-R&B, halftime breakdown → final lift
+- 136-150 BPM: Trap-soul club-ready, heavy 808s, playful ad-libs
+
+═══ ORGANIC LYRIC MODE ═══
+- Verses: 2-3 concrete details (time/place/object/gesture/dialogue)
+- POV: first-person direct address, commas as micro-pauses
+- Show > tell; cliché filter on verses; ONE sticky metaphor in chorus
+- Rhyme: soft/family rhymes, internal echoes, varied line openings
+- Arc: Verse=scene, Pre=turn, Chorus=confession, Bridge=new truth/lift
+- Range: male C3-E4 (peak G4/A4), female G3-B4 (peak C5/D5)
+
+═══ SUPER SUNO SONGWRITING PRINCIPLES ═══
+- Emotional honesty without wordiness
+- Bounce + clarity even in sad songs
+- Hook precision: memorable repeatable lines
+- Clean structure: Intro → Verse → Pre → Chorus → Verse → Pre → Chorus → Bridge → Final Chorus
+- Emotional build & payoff especially in bridges
+- Clear POV rooted in specific perspective
+
+═══ VOICE STYLE EMULATION ═══
+When emulating vocal identity, provide Detailed Description (1-2 sentences on tone/texture/phrasing) AND Keyword Bundle (4-8 compact descriptors). NEVER include artist names. Use descriptors from RateYourMusic, AllMusic, Discogs style vocabulary. Embed traits inside Chorus/Final Chorus section headers.
+
+═══ QUALITY BAR ═══
+- Simple universal concept; title lands in chorus
+- Verses = specifics, chorus = confession, bridge = lift
+- Energy rises (Verse < Pre < Chorus); Final Chorus adds harmony/ad-libs/key-lift
+- One sticky metaphor max in chorus; ban filler clichés in verses
+
+═══ OUTPUT FORMAT (JSON) ═══
+Return ONLY valid JSON with these keys:
+{
+  "title": "Song title",
+  "style_prompt": "Compact style field under 1000 chars — genre, mood, tempo, vibe, lead voice type, core instruments",
+  "lyrics_prompt": "Full lyrics with EVERY section header containing arrangement cues + vocal descriptors + dynamic notes in parentheses. Format: [Section] (arrangement cues, vocal descriptors, [dynamic])\\nLyric line 1,\\nLyric line 2",
+  "alt_style_1": "Alternative compact style variation 1",
+  "alt_style_2": "Alternative compact style variation 2",
+  "voice_profile_detailed": "1-2 sentence vocal description without artist names",
+  "voice_keywords": "4-8 compact voice descriptors separated by commas",
+  "vocal_direction": "Overall vocal delivery notes",
+  "arrangement_notes": "Section-by-section arrangement summary",
+  "tags": ["5-8 precise keyword tags"]
+}
+
+Return ONLY valid JSON. No markdown fences. No explanation text.`;
 
 // ═══════ STORAGE ═══════
 function save(){try{localStorage.setItem("onus3-p",JSON.stringify(S.prompts))}catch(e){}try{localStorage.setItem("onus3-b",JSON.stringify(S.builder))}catch(e){}try{localStorage.setItem("onus3-m",JSON.stringify(S.masters))}catch(e){}try{localStorage.setItem("onus3-tl",JSON.stringify(S.timeline))}catch(e){}try{localStorage.setItem("onus3-sc",JSON.stringify(S.scores))}catch(e){}try{localStorage.setItem("onus3-ai",JSON.stringify(S.aiResult))}catch(e){}try{localStorage.setItem("onus3-aid",S.aiDesc)}catch(e){}try{localStorage.setItem("onus3-pv",S.promptVersion)}catch(e){}try{localStorage.setItem("onus3-proj",JSON.stringify(S.project))}catch(e){}try{localStorage.setItem("onus3-res",JSON.stringify(S.results))}catch(e){}}
@@ -782,7 +859,7 @@ Return ONLY valid JSON. No markdown fences. No explanation text before or after 
 async function aiGenerate(description){
 if(!API_KEY){toast("Set your API key first — go to Create tab");return null;}
 try{
-const sysPrompt=S.promptVersion==="v2"?FLOSS_SYSTEM:ONUS_SYSTEM;
+const sysPrompt=S.promptVersion==="v3"?GENIUS_SYSTEM:S.promptVersion==="v2"?FLOSS_SYSTEM:ONUS_SYSTEM;
 const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":API_KEY,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,system:sysPrompt,messages:[{role:"user",content:description}]})});
 if(!res.ok){const err=await res.json().catch(()=>({}));toast("API error: "+(err.error?.message||res.status));return null;}
 const data=await res.json();
@@ -1332,7 +1409,7 @@ const keepParts=Object.entries(S.aiResult).filter(([k,v])=>k!==sectionKey&&typeo
 const refreshPrompt="I already have a generated song. I want to KEEP everything else but get a NEW "+sectionLabel+". Here is the context of the existing song:\n"+keepParts+"\n\nGenerate ONLY a new "+sectionLabel+". Return JSON with just the key '"+sectionKey+"' and the new content. Return ONLY valid JSON, no markdown.";
 toast("Refreshing "+sectionLabel+"...");
 try{
-const sysPrompt=S.promptVersion==="v2"?FLOSS_SYSTEM:ONUS_SYSTEM;
+const sysPrompt=S.promptVersion==="v3"?GENIUS_SYSTEM:S.promptVersion==="v2"?FLOSS_SYSTEM:ONUS_SYSTEM;
 const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":API_KEY,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,system:sysPrompt,messages:[{role:"user",content:refreshPrompt}]})});
 if(!res.ok){toast("Refresh failed");return;}
 const data=await res.json();
