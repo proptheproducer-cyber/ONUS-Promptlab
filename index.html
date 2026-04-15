@@ -788,11 +788,16 @@ const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",hea
 if(!res.ok){const err=await res.json().catch(()=>({}));toast("API error: "+(err.error?.message||res.status));return null;}
 const data=await res.json();
 const text=data.content.filter(c=>c.type==="text").map(c=>c.text||"").join("");
-const clean=text.replace(/```json|```/g,"").trim();
-try{return JSON.parse(clean);}catch(pe){
-const s=clean.indexOf("{");const e2=clean.lastIndexOf("}");
-if(s>=0&&e2>s){try{return JSON.parse(clean.substring(s,e2+1));}catch(pe2){}}
-toast("Response parse error — try again");return null;}
+let parsed;
+try {
+  const cleanText = text.trim().replace(/^```json\s*/,'').replace(/```$/,'').trim();
+  parsed = JSON.parse(cleanText);
+} catch(e) {
+  const s=text.indexOf("{");const e2=text.lastIndexOf("}");
+  if(s>=0&&e2>s){try{parsed=JSON.parse(text.substring(s,e2+1));}catch(pe2){}}
+  if(!parsed){console.error("JSON parse failed:", text);toast("Response parse error — try again");return null;}
+}
+return parsed;
 }catch(e){
 if(e.message&&e.message.includes("Invalid response format")){
 toast("⚠️ Generation blocked by Claude viewer. Download the HTML file → open in Safari/Chrome → generation works there.");
@@ -1338,8 +1343,15 @@ const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",hea
 if(!res.ok){toast("Refresh failed");return;}
 const data=await res.json();
 const text=data.content.filter(c=>c.type==="text").map(c=>c.text||"").join("");
-const clean=text.replace(/```json|```/g,"").trim();
-const parsed=JSON.parse(clean);
+let parsed;
+try {
+  const cleanText = text.trim().replace(/^```json\s*/,'').replace(/```$/,'').trim();
+  parsed = JSON.parse(cleanText);
+} catch(e) {
+  const s=text.indexOf("{");const e2=text.lastIndexOf("}");
+  if(s>=0&&e2>s){try{parsed=JSON.parse(text.substring(s,e2+1));}catch(pe2){}}
+  if(!parsed){console.error("JSON parse failed:", text);toast("Refresh parse error — try again");return;}
+}
 // Save old version before replacing
 const oldVal=S.aiResult[sectionKey];
 if(oldVal){S.prompts.unshift({id:uid(),title:"[Old "+sectionLabel+"] "+(r.title||""),category:sectionKey==="lyrics_prompt"?"lyrics":sectionKey.includes("style")?"style":sectionKey.includes("vocal")?"vocal":"arrangement",tags:r.tags||[],content:oldVal,rating:3,created:Date.now(),versions:[]});}
