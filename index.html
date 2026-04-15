@@ -765,7 +765,20 @@ Always return three sections (unless user explicitly says otherwise):
 - NO AI-TELL PHRASES from the ban list
 - For rap: talk-rap tagging mandatory unless user explicitly requests melodic
 - Always complete all 12 reasoning steps before generating
-- If hit scorecard <85, revise before outputting`;
+- If hit scorecard <85, revise before outputting
+
+═══ CRITICAL OUTPUT FORMAT — READ THIS LAST ═══
+Your final response must be ONLY a single valid JSON object. No prose before it. No prose after it. No markdown code fences. No explanation. Just the JSON object starting with { and ending with }.
+
+The JSON object must have these exact keys with string values:
+{
+  "lyrics_prompt": "full sectioned lyrics with [brackets] for sections",
+  "style_prompt": "single line tag chain with BPM and Key",
+  "alt_style_1": "first variant one line",
+  "alt_style_2": "second variant one line"
+}
+
+If you include ANY text outside the JSON object, the app will crash. Output JSON only.`;
 
 async function aiGenerate(description){
 if(!API_KEY){toast("Set your API key first — go to Create tab");return null;}
