@@ -771,7 +771,7 @@ async function aiGenerate(description){
 if(!API_KEY){toast("Set your API key first — go to Create tab");return null;}
 try{
 const sysPrompt=S.promptVersion==="v3"?GENIUS_SYSTEM:S.promptVersion==="v2"?FLOSS_SYSTEM:ONUS_SYSTEM;
-const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":API_KEY,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:24000,temperature:1,thinking:{type:"enabled",budget_tokens:16000},system:sysPrompt,messages:[{role:"user",content:description}]})});
+const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":API_KEY,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-5-20250929",max_tokens:24000,temperature:1,thinking:{type:"enabled",budget_tokens:16000},system:sysPrompt,messages:[{role:"user",content:description}]})});
 if(!res.ok){const err=await res.json().catch(()=>({}));toast("API error: "+(err.error?.message||res.status));return null;}
 const data=await res.json();
 const text=data.content.filter(c=>c.type==="text").map(c=>c.text||"").join("");
@@ -1321,7 +1321,7 @@ const refreshPrompt="I already have a generated song. I want to KEEP everything 
 toast("Refreshing "+sectionLabel+"...");
 try{
 const sysPrompt=S.promptVersion==="v3"?GENIUS_SYSTEM:S.promptVersion==="v2"?FLOSS_SYSTEM:ONUS_SYSTEM;
-const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":API_KEY,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:24000,temperature:1,thinking:{type:"enabled",budget_tokens:16000},system:sysPrompt,messages:[{role:"user",content:refreshPrompt}]})});
+const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":API_KEY,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-5-20250929",max_tokens:24000,temperature:1,thinking:{type:"enabled",budget_tokens:16000},system:sysPrompt,messages:[{role:"user",content:refreshPrompt}]})});
 if(!res.ok){toast("Refresh failed");return;}
 const data=await res.json();
 const text=data.content.filter(c=>c.type==="text").map(c=>c.text||"").join("");
