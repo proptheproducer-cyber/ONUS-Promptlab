@@ -325,7 +325,9 @@ let S={prompts:[],builder:[],masters:[],view:"create",cat:"all",tags:[],q:"",edi
 // Project context — persists across sessions
 project:{name:"",genre:"",bpm:"",key:"",mood:"",type:"song"},
 // Result tracking — link prompts to Suno URLs
-results:[]
+results:[],
+// Last prompt sent (for debugging/visibility)
+lastSent:null
 };
 const uid=()=>Math.random().toString(36).slice(2,10);
 const PROMPT_VERSIONS = {
@@ -460,7 +462,8 @@ try{const ai=localStorage.getItem("onus3-ai");if(ai)S.aiResult=JSON.parse(ai);}c
 try{const aid=localStorage.getItem("onus3-aid");if(aid)S.aiDesc=aid;}catch(e){}
 try{const pv=localStorage.getItem("onus3-pv");if(pv)S.promptVersion=pv;}catch(e){}
 try{const pj=localStorage.getItem("onus3-proj");if(pj)S.project=JSON.parse(pj);}catch(e){}
-try{const rs=localStorage.getItem("onus3-res");if(rs)S.results=JSON.parse(rs);}catch(e){}}
+try{const rs=localStorage.getItem("onus3-res");if(rs)S.results=JSON.parse(rs);}catch(e){}
+try{const ls=localStorage.getItem("onus3-lastSent");if(ls)S.lastSent=JSON.parse(ls);}catch(e){}}
 
 // ═══════ IMPORT/EXPORT ═══════
 function exportAll(){const d={prompts:S.prompts,builder:S.builder,masters:S.masters,timeline:S.timeline,scores:S.scores,exported:new Date().toISOString()};const b=new Blob([JSON.stringify(d,null,2)],{type:"application/json"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download=`onus-v2-backup-${Date.now()}.json`;a.click();URL.revokeObjectURL(u);toast("Exported all data");}
@@ -814,6 +817,8 @@ async function aiGenerate(description){
 if(!API_KEY){toast("Set your API key first — go to Create tab");return null;}
 try{
 const sysPrompt=S.promptVersion==="v3"?GENIUS_SYSTEM:S.promptVersion==="v2"?FLOSS_SYSTEM:ONUS_SYSTEM;
+S.lastSent={version:S.promptVersion==="v3"?"V3 Prompt Genius":S.promptVersion==="v2"?"V2 Floss Suno Sauce":"V1.4 ONUS",timestamp:new Date().toISOString(),systemPrompt:sysPrompt,userMessage:description,systemLength:sysPrompt.length,userLength:description.length,totalLength:sysPrompt.length+description.length};
+try{localStorage.setItem("onus3-lastSent",JSON.stringify(S.lastSent));}catch(ex){}
 const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":API_KEY,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-5-20250929",max_tokens:24000,temperature:1,thinking:{type:"enabled",budget_tokens:16000},system:sysPrompt,messages:[{role:"user",content:description}]})});
 if(!res.ok){const err=await res.json().catch(()=>({}));toast("API error: "+(err.error?.message||res.status));return null;}
 const data=await res.json();
@@ -951,7 +956,7 @@ function render(){
 const app=document.getElementById("app");app.innerHTML="";
 // Header
 app.append(h("header",{className:"hdr"},[
-h("div",{className:"hdr-l"},[h("div",{className:"logo"},"⚡"),h("div",{},[h("div",{className:"logo-t"},["ONUS ",h("span",{className:"logo-a"},"PromptLab")]),h("div",{className:"logo-sub"},"Build · Store · Fuse · Score · Deploy")])]),
+h("div",{className:"hdr-l"},[h("div",{className:"logo"},"⚡"),h("div",{},[h("div",{className:"logo-t",style:{display:"flex",alignItems:"center",gap:"8px"}},["ONUS ",h("span",{className:"logo-a"},"PromptLab"),h("span",{style:{fontSize:"9px",fontWeight:"700",padding:"2px 7px",borderRadius:"6px",background:"linear-gradient(135deg,rgba(52,211,153,0.15),rgba(52,211,153,0.08))",color:"var(--green)",border:"1px solid rgba(52,211,153,0.25)",letterSpacing:"0.5px"}},"ONUS 1.4")]),h("div",{className:"logo-sub"},"Build · Store · Fuse · Score · Deploy")])]),
 h("nav",{className:"nav"},["create","library","saved"].map(k=>{const labels={create:"🤖 Create",library:"📚 Library",saved:"⚡ Masters"};const btn=h("button",{className:"nb"+(S.view===k||(k==="create"&&["create","timeline","builder","scorecard","ai","finalize"].includes(S.view))||(k==="library"&&S.view==="library")?" a":""),onClick:()=>switchView(k)},labels[k]);if(k==="library"&&S.builder.length>0)btn.append(h("span",{className:"bdg"},String(S.builder.length)));return btn;}))
 ]));
 
@@ -1356,6 +1361,23 @@ if(!result||typeof result!=="object")return;
 S.aiResult=result;try{localStorage.setItem("onus3-ai",JSON.stringify(result))}catch(ex){}
 render();}},"⚡ GENERATE");
 w.append(genBtn);
+// View What Was Sent button
+if(S.lastSent){
+w.append(h("button",{className:"ob",style:{width:"100%",marginTop:"8px",fontSize:"11px",padding:"10px",border:"1px dashed rgba(52,211,153,0.25)",color:"var(--green)",background:"rgba(52,211,153,0.04)"},onClick:()=>{
+const ls=S.lastSent;
+const overlay=h("div",{style:{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",zIndex:400,display:"flex",alignItems:"flex-end",justifyContent:"center",animation:"fadeUp .15s ease"},onClick:(e)=>{if(e.target===overlay)overlay.remove();}});
+const modal=h("div",{style:{width:"100%",maxWidth:"600px",maxHeight:"90vh",background:"linear-gradient(to bottom, #131a2e, #0d1220)",borderRadius:"16px 16px 0 0",overflowY:"auto",animation:"slideUp .2s ease"}});
+const hdr2=h("div",{style:{position:"sticky",top:0,zIndex:1,background:"#131a2e",padding:"14px 16px",borderBottom:"1px solid var(--bd)",display:"flex",justifyContent:"space-between",alignItems:"center"}});
+hdr2.append(h("div",{},[h("div",{style:{fontSize:"15px",fontWeight:"800",color:"#fff"}},"What Was Sent to Claude"),h("div",{style:{fontSize:"10px",color:"var(--tx3)",marginTop:"2px"}},new Date(ls.timestamp).toLocaleString())]));
+hdr2.append(h("button",{className:"ob",style:{fontSize:"11px",padding:"6px 12px"},onClick:()=>overlay.remove()},"Close"));
+modal.append(hdr2);
+const body2=h("div",{style:{padding:"16px"}});
+body2.append(h("div",{style:{padding:"12px",borderRadius:"10px",background:"rgba(52,211,153,0.06)",marginBottom:"12px"}},[h("div",{style:{fontSize:"11px",color:"var(--green)",fontWeight:"700",marginBottom:"4px"}},"Summary"),h("div",{style:{fontSize:"11px",color:"var(--tx2)",lineHeight:"1.8"}},[h("div",{},"Engine: "+ls.version),h("div",{},"System prompt: "+ls.systemLength.toLocaleString()+" chars"),h("div",{},"Your prompt: "+ls.userLength.toLocaleString()+" chars"),h("div",{style:{fontWeight:"700",color:"var(--gold)"}},"Total: "+ls.totalLength.toLocaleString()+" chars")])]));
+body2.append(h("div",{style:{marginBottom:"14px"}},[h("div",{style:{fontSize:"10px",textTransform:"uppercase",letterSpacing:"2px",color:"var(--gold)",fontWeight:"800",marginBottom:"6px"}},"YOUR MESSAGE"),h("div",{style:{fontSize:"11px",fontFamily:"var(--mo)",lineHeight:"1.7",color:"var(--tx)",padding:"12px",background:"rgba(0,0,0,0.3)",borderRadius:"8px",whiteSpace:"pre-wrap",maxHeight:"250px",overflow:"auto"}},ls.userMessage),h("button",{className:"ob",style:{fontSize:"10px",padding:"5px 10px",marginTop:"6px"},onClick:()=>{navigator.clipboard.writeText(ls.userMessage).then(()=>toast("Copied"));}},"Copy")]));
+const det=h("details",{style:{marginBottom:"12px"}});det.append(h("summary",{style:{fontSize:"10px",textTransform:"uppercase",letterSpacing:"2px",color:"var(--tx2)",fontWeight:"800",cursor:"pointer",padding:"8px 0"}},"SYSTEM PROMPT (tap to expand)"));det.append(h("div",{style:{fontSize:"10px",fontFamily:"var(--mo)",lineHeight:"1.7",color:"var(--tx2)",padding:"12px",background:"rgba(0,0,0,0.3)",borderRadius:"8px",whiteSpace:"pre-wrap",maxHeight:"400px",overflow:"auto"}},ls.systemPrompt));
+body2.append(det);modal.append(body2);overlay.append(modal);document.body.appendChild(overlay);
+}},"View What Was Sent to Claude (last generation)"));
+}
 // Show persisted results
 if(S.aiResult){
 const r=S.aiResult;
