@@ -1747,7 +1747,7 @@ function makeTagBtn(tag,catType){
     if(ex){
       // UNSELECT: remove from builder
       S.builder=S.builder.filter(x=>x.builderId!==ex.builderId);
-      save();updMN();
+      save();
     }else{
       // SELECT: push full descriptor as builder block — this feeds the master prompt
       const catMap={Mood:"production",Instruments:"arrangement",Vocals:"vocal",Beats:"beats",Samples:"samples",SoundDesign:"sounddesign"};
@@ -1755,8 +1755,11 @@ function makeTagBtn(tag,catType){
       const block={id:uid(),builderId:uid(),title:bldTitle,category:cat,tags:[tag],
         content:desc||tag,  // the TAG_DESCRIPTOR mini-prompt IS the content
         rating:3,created:Date.now(),versions:[]};
-      S.builder.push(block);save();updMN();
+      S.builder.push(block);save();
     }
+    // render() is safe here — modal lives on body, not inside app, so it won't be destroyed
+    // This instantly updates the nav badge count and builder block list
+    render();updMN();
     sync(); // update this button's visual immediately
   };
   return btn;
