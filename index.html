@@ -960,14 +960,29 @@ h("div",{className:"hdr-l"},[h("div",{className:"logo"},"⚡"),h("div",{},[h("di
 h("nav",{className:"nav"},["create","library","saved"].map(k=>{const labels={create:"🤖 Create",library:"📚 Library",saved:"⚡ Masters"};const btn=h("button",{className:"nb"+(S.view===k||(k==="create"&&["create","timeline","builder","scorecard","ai","finalize"].includes(S.view))||(k==="library"&&S.view==="library")?" a":""),onClick:()=>switchView(k)},labels[k]);if(k==="library"&&S.builder.length>0)btn.append(h("span",{className:"bdg"},String(S.builder.length)));return btn;}))
 ]));
 
-// ═══ SHARED: descTag — used in Tags modal (Create) ═══
+// ═══ SHARED: descTag — toggle add/remove, DOM-only update, modal stays open ═══
 function descTag(tag,catType){
 const desc=TAG_DESCRIPTORS[tag];
-const inBld=S.builder.some(b=>b.title===tag+" — "+catType);
-return h("button",{className:"tp"+(inBld?" a":""),onClick:()=>{
-if(desc){addDescToBuilder(tag+" — "+catType,catType==="Mood"?"production":catType==="Instruments"?"arrangement":catType==="Vocals"?"vocal":catType==="Beats"?"beats":catType==="Samples"?"samples":catType==="SoundDesign"?"sounddesign":"style",desc,[tag]);}
-else{addDescToBuilder(tag,"style",tag,[tag]);}
-}},inBld?"✓ "+tag:"+ "+tag);}
+const bldTitle=tag+" — "+catType;
+const btn=h("button",{className:"tp"});
+function syncBtn(){
+  const active=S.builder.some(b=>b.title===bldTitle);
+  btn.className="tp"+(active?" a":"");
+  btn.textContent=(active?"✓ ":"+ ")+tag;
+}
+syncBtn();
+btn.onclick=()=>{
+  const existing=S.builder.find(b=>b.title===bldTitle);
+  if(existing){
+    S.builder=S.builder.filter(x=>x.builderId!==existing.builderId);
+    save();updMN();
+  }else{
+    if(desc){addDescToBuilder(bldTitle,catType==="Mood"?"production":catType==="Instruments"?"arrangement":catType==="Vocals"?"vocal":catType==="Beats"?"beats":catType==="Samples"?"samples":catType==="SoundDesign"?"sounddesign":"style",desc,[tag]);}
+    else{addDescToBuilder(tag,"style",tag,[tag]);}
+  }
+  syncBtn();
+};
+return btn;}
 
 // ═══ LIBRARY ═══
 if(S.view==="library"){
@@ -1335,7 +1350,7 @@ const modalHdr=h("div",{style:{position:"sticky",top:0,background:"linear-gradie
 modalHdr.append(h("div",{style:{width:"40px",height:"4px",borderRadius:"2px",background:"rgba(255,255,255,0.2)",margin:"0 auto 12px"}}));
 modalHdr.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},[
   h("div",{},[
-    h("div",{style:{fontSize:"18px",fontWeight:"800",color:"#fff"}},"Production Tags"),
+    h("div",{style:{fontSize:"18px",fontWeight:"800",color:"#fff"}},"Tags"),
     h("div",{style:{fontSize:"11px",color:"var(--tx3)",marginTop:"2px"}},"Tap any tag to add its description to your Builder"),
   ]),
   h("button",{style:{padding:"8px 16px",borderRadius:"10px",border:"1px solid var(--bd)",background:"rgba(255,255,255,0.05)",color:"var(--tx2)",fontSize:"12px",fontWeight:"600",cursor:"pointer",fontFamily:"var(--fn)"},onClick:closeTagModal},"✕ Done"),
@@ -1358,7 +1373,7 @@ modal.append(tsec("mixtech","🎚️ Mix Techniques",["parallel-comp","stereo-wi
 modalBg.append(modal);
 app.append(modalBg);
 // The button — just flips display, zero re-render
-const tagBtn=h("button",{className:"gb",style:{width:"100%",padding:"10px",fontSize:"12px",fontWeight:"700",background:"linear-gradient(135deg,rgba(52,211,153,0.1),rgba(52,211,153,0.05))",color:"var(--green)",borderColor:"rgba(52,211,153,0.2)",marginTop:"6px"}},"🏷️ Production Tags");
+const tagBtn=h("button",{className:"gb",style:{width:"100%",padding:"10px",fontSize:"12px",fontWeight:"700",background:"linear-gradient(135deg,rgba(52,211,153,0.1),rgba(52,211,153,0.05))",color:"var(--green)",borderColor:"rgba(52,211,153,0.2)",marginTop:"6px"}},"🏷️ Tags");
 tagBtn.onclick=()=>{modalBg.style.display==="none"?openTagModal():closeTagModal();};
 w.append(tagBtn);
 })();
