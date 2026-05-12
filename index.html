@@ -1333,7 +1333,7 @@ render();}},"⚡ GENERATE");
 w.append(genBtn);
 // Tags button — calls global modal (built once outside render, lives on body)
 const tagBtn=h("button",{className:"gb",style:{width:"100%",padding:"10px",fontSize:"12px",fontWeight:"700",background:"linear-gradient(135deg,rgba(52,211,153,0.1),rgba(52,211,153,0.05))",color:"var(--green)",borderColor:"rgba(52,211,153,0.2)",marginTop:"6px"}},"🏷️ Tags");
-tagBtn.onclick=()=>{if(window._tagModalBg)window._tagModalBg.style.display=window._tagModalBg.style.display==="none"?"block":"none";};
+tagBtn.onclick=()=>{if(window._tagModalBg){const opening=window._tagModalBg.style.display==="none";window._tagModalBg.style.display=opening?"block":"none";if(opening&&window._refreshTagBtns)window._refreshTagBtns();}};
 w.append(tagBtn);
 // View What Was Sent button
 if(S.lastSent){
@@ -1724,7 +1724,11 @@ function tsec(label,items){
   sec.appendChild(hd);sec.appendChild(body);
   return sec;
 }
+// Registry: collect all sync() fns so we can refresh all buttons when modal re-opens
+const _allSyncs=[];
 function makeTagBtn(tag,catType){
+  // desc = TAG_DESCRIPTORS[tag] — the full production mini-prompt for this tag
+  // This IS the content that feeds the master prompt. Core feature, must not be lost.
   const desc=TAG_DESCRIPTORS[tag];
   const bldTitle=tag+" — "+catType;
   const btn=h2("button",{style:{padding:"4px 10px",borderRadius:"20px",border:"1px solid rgba(255,255,255,0.15)",background:"rgba(255,255,255,0.05)",color:"#ccc",fontSize:"11px",cursor:"pointer",fontFamily:"var(--fn,system-ui)",transition:"all .15s"}});
@@ -1735,20 +1739,30 @@ function makeTagBtn(tag,catType){
     btn.style.color=on?"#D4AF37":"#ccc";
     btn.textContent=(on?"✓ ":"+")+tag;
   }
+  _allSyncs.push(sync); // register for global refresh on modal open
   sync();
-  btn.onclick=()=>{
+  btn.onclick=(e)=>{
+    e.stopPropagation(); // prevent accidental background close
     const ex=S.builder.find(b=>b.title===bldTitle);
-    if(ex){S.builder=S.builder.filter(x=>x.builderId!==ex.builderId);save();updMN();}
-    else{
+    if(ex){
+      // UNSELECT: remove from builder
+      S.builder=S.builder.filter(x=>x.builderId!==ex.builderId);
+      save();updMN();
+    }else{
+      // SELECT: push full descriptor as builder block — this feeds the master prompt
       const catMap={Mood:"production",Instruments:"arrangement",Vocals:"vocal",Beats:"beats",Samples:"samples",SoundDesign:"sounddesign"};
       const cat=catMap[catType]||"style";
-      const block={id:uid(),builderId:uid(),title:bldTitle,category:cat,tags:[tag],content:desc||tag,rating:3,created:Date.now(),versions:[]};
+      const block={id:uid(),builderId:uid(),title:bldTitle,category:cat,tags:[tag],
+        content:desc||tag,  // the TAG_DESCRIPTOR mini-prompt IS the content
+        rating:3,created:Date.now(),versions:[]};
       S.builder.push(block);save();updMN();
     }
-    sync();
+    sync(); // update this button's visual immediately
   };
   return btn;
 }
+// Expose refresh — call this when opening modal so buttons reflect any external builder changes
+window._refreshTagBtns=()=>_allSyncs.forEach(fn=>fn());
 const bg=h2("div",{style:{position:"fixed",inset:"0",background:"rgba(0,0,0,0.65)",zIndex:"500",display:"none"}});
 const panel=h2("div",{style:{position:"fixed",bottom:"0",left:"0",right:"0",maxHeight:"78vh",background:"linear-gradient(to bottom,#131a2e,#0d1220)",borderRadius:"20px 20px 0 0",padding:"0 16px 24px",overflowY:"auto",zIndex:"501",boxShadow:"0 -8px 60px rgba(0,0,0,0.7)"}});
 bg.onclick=(e)=>{if(e.target===bg)bg.style.display="none";};
