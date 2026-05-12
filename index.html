@@ -1331,52 +1331,10 @@ if(!result||typeof result!=="object")return;
 S.aiResult=result;try{localStorage.setItem("onus3-ai",JSON.stringify(result))}catch(ex){}
 render();}},"⚡ GENERATE");
 w.append(genBtn);
-// ═── TAGS MODAL — always in DOM, toggled via display only, no re-render ──═
-(()=>{
-function tsec(key,label,items){
-  const body=h("div",{className:"tc",style:{marginBottom:"6px",marginTop:"6px"}},items);
-  const hd=h("div",{style:{fontSize:"11px",fontWeight:"700",color:"var(--gold)",padding:"6px 0",cursor:"pointer",borderBottom:"1px solid var(--bd)"}},["▼  "+label]);
-  let open=true;
-  hd.onclick=()=>{open=!open;body.style.display=open?"flex":"none";hd.textContent=(open?"▼  ":"▶  ")+label;};
-  return h("div",{style:{marginBottom:"6px"}},[hd,body]);
-}
-const modalBg=h("div",{style:{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:200,display:"none"}});
-const modal=h("div",{style:{position:"fixed",bottom:0,left:0,right:0,maxHeight:"75vh",background:"linear-gradient(to bottom,#131a2e,#0d1220)",borderRadius:"20px 20px 0 0",padding:"0 16px calc(16px + var(--sb))",overflowY:"auto",zIndex:201,boxShadow:"0 -8px 60px rgba(0,0,0,0.6)",WebkitOverflowScrolling:"touch"}});
-function closeTagModal(){modalBg.style.display="none";}
-function openTagModal(){modalBg.style.display="block";}
-modalBg.onclick=(e)=>{if(e.target===modalBg)closeTagModal();};
-// Header
-const modalHdr=h("div",{style:{position:"sticky",top:0,background:"linear-gradient(to bottom,#131a2e,#131a2e,transparent)",padding:"12px 0 8px",zIndex:1}});
-modalHdr.append(h("div",{style:{width:"40px",height:"4px",borderRadius:"2px",background:"rgba(255,255,255,0.2)",margin:"0 auto 12px"}}));
-modalHdr.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},[
-  h("div",{},[
-    h("div",{style:{fontSize:"18px",fontWeight:"800",color:"#fff"}},"Tags"),
-    h("div",{style:{fontSize:"11px",color:"var(--tx3)",marginTop:"2px"}},"Tap any tag to add its description to your Builder"),
-  ]),
-  h("button",{style:{padding:"8px 16px",borderRadius:"10px",border:"1px solid var(--bd)",background:"rgba(255,255,255,0.05)",color:"var(--tx2)",fontSize:"12px",fontWeight:"600",cursor:"pointer",fontFamily:"var(--fn)"},onClick:closeTagModal},"✕ Done"),
-]));
-modal.append(modalHdr);
-modal.append(h("div",{style:{fontSize:"9px",color:"var(--tx3)",marginBottom:"8px"}},"Tap any tag to add its production description to your Builder."));
-modal.append(tsec("mood","🎭 Mood",MOOD_TAGS.filter(t=>TAG_DESCRIPTORS[t]).map(t=>descTag(t,"Mood"))));
-modal.append(tsec("inst","🎸 Instruments",TAG_PALETTE.Instruments.filter(t=>TAG_DESCRIPTORS[t]).map(t=>descTag(t,"Instruments"))));
-modal.append(tsec("vocal","🗣️ Vocals",TAG_PALETTE.Vocals.filter(t=>TAG_DESCRIPTORS[t]).map(t=>descTag(t,"Vocals"))));
-modal.append(tsec("beats","🥁 Drums/Beats",["boom-bap-drums","trap-drums","live-drums","breakbeat","four-on-floor","half-time"].map(t=>descTag(t,"Beats"))));
-modal.append(tsec("loops","🔁 Samples/Loops",["drum-loop","melody-loop","bass-loop","chord-loop","ambient-loop","one-shot","resample-source","chop-ready","stem-ready"].map(t=>descTag(t,"Samples"))));
-modal.append(tsec("sfx","✨ Sound Design",["sidechain","vinyl-texture","tape-saturation","bitcrushed","riser","impact","foley","vocal-chop","transition-fx","lo-fi-process","auto-filter"].map(t=>descTag(t,"SoundDesign"))));
-modal.append(tsec("synths","🎹 Synths",["moog-bass","juno-pad","jupiter-pad","prophet-lead","dx7-keys","arp-synth","supersaw","sub-bass","pluck-synth","analog-lead","fm-bass","wobble-bass","pad-evolving"].map(t=>descTag(t,"Instruments"))));
-modal.append(tsec("basstypes","🔊 Bass",["808","moog-bass","upright-bass","p-bass","slap-bass","fretless-bass","synth-bass","distorted-bass","reese-bass","fm-bass","sub-bass"].map(t=>descTag(t,"Instruments"))));
-modal.append(tsec("guitars","🎸 Guitars",["acoustic-guitar","clean-electric","overdriven","distorted-guitar","wah-guitar","12-string","nylon-guitar","pedal-steel","funk-guitar"].map(t=>descTag(t,"Instruments"))));
-modal.append(tsec("keys2","🎹 Keys/Boards",["Rhodes","wurlitzer","piano","organ","clavinet","mellotron","harpsichord","celeste","b3-organ","accordion","dx7-keys"].map(t=>descTag(t,"Instruments"))));
-modal.append(tsec("perc","🪘 Percussion",["congas","bongos","tambourine","shaker","djembe","timbales","cowbell","finger-snaps","woodblock","cajon","tabla","handclaps"].map(t=>descTag(t,"Instruments"))));
-modal.append(tsec("oneshots","💥 One-Shots",["kick-punchy","kick-boomy","snare-crack","snare-fat","clap-layered","hihat-closed","hihat-open","rim-shot","perc-hit","one-shot"].map(t=>descTag(t,"SoundDesign"))));
-modal.append(tsec("mixtech","🎚️ Mix Techniques",["parallel-comp","stereo-width","saturation","reverb-plate","reverb-room","reverb-hall","delay-tape","delay-ping","multiband-comp","mid-side","sidechain"].map(t=>descTag(t,"SoundDesign"))));
-modalBg.append(modal);
-app.append(modalBg);
-// The button — just flips display, zero re-render
+// Tags button — calls global modal (built once outside render, lives on body)
 const tagBtn=h("button",{className:"gb",style:{width:"100%",padding:"10px",fontSize:"12px",fontWeight:"700",background:"linear-gradient(135deg,rgba(52,211,153,0.1),rgba(52,211,153,0.05))",color:"var(--green)",borderColor:"rgba(52,211,153,0.2)",marginTop:"6px"}},"🏷️ Tags");
-tagBtn.onclick=()=>{modalBg.style.display==="none"?openTagModal():closeTagModal();};
+tagBtn.onclick=()=>{if(window._tagModalBg)window._tagModalBg.style.display=window._tagModalBg.style.display==="none"?"block":"none";};
 w.append(tagBtn);
-})();
 // View What Was Sent button
 if(S.lastSent){
 w.append(h("button",{className:"ob",style:{width:"100%",marginTop:"8px",fontSize:"11px",padding:"10px",border:"1px dashed rgba(52,211,153,0.25)",color:"var(--green)",background:"rgba(52,211,153,0.04)"},onClick:()=>{
@@ -1750,7 +1708,80 @@ app.append(w);}
 updMN();}
 
 // ═══════ INIT ═══════
-load();render();
+load();
+
+// ═── TAGS MODAL — built ONCE on body, survives all render() calls ──═
+(()=>{
+function h2(tag,a,...ch){const el=document.createElement(tag);if(a)Object.entries(a).forEach(([k,v])=>{if(k==="style"&&typeof v==="object")Object.assign(el.style,v);else if(k.startsWith("on"))el.addEventListener(k.slice(2).toLowerCase(),v);else el.setAttribute(k,v);});ch.flat(9).forEach(c=>{if(c==null)return;el.appendChild(typeof c==="string"?document.createTextNode(c):c);});return el;}
+function tsec(label,items){
+  const body=h2("div",{style:{display:"flex",flexWrap:"wrap",gap:"4px",marginBottom:"6px",marginTop:"6px"}});
+  items.forEach(i=>body.appendChild(i));
+  const hd=h2("div",{style:{fontSize:"11px",fontWeight:"700",color:"#D4AF37",padding:"6px 0",cursor:"pointer",borderBottom:"1px solid rgba(255,255,255,0.08)"}});
+  hd.textContent="▼  "+label;
+  let open=true;
+  hd.onclick=()=>{open=!open;body.style.display=open?"flex":"none";hd.textContent=(open?"▼  ":"▶  ")+label;};
+  const sec=h2("div",{style:{marginBottom:"6px"}});
+  sec.appendChild(hd);sec.appendChild(body);
+  return sec;
+}
+function makeTagBtn(tag,catType){
+  const desc=TAG_DESCRIPTORS[tag];
+  const bldTitle=tag+" — "+catType;
+  const btn=h2("button",{style:{padding:"4px 10px",borderRadius:"20px",border:"1px solid rgba(255,255,255,0.15)",background:"rgba(255,255,255,0.05)",color:"#ccc",fontSize:"11px",cursor:"pointer",fontFamily:"var(--fn,system-ui)",transition:"all .15s"}});
+  function sync(){
+    const on=S.builder.some(b=>b.title===bldTitle);
+    btn.style.background=on?"rgba(212,175,55,0.25)":"rgba(255,255,255,0.05)";
+    btn.style.borderColor=on?"rgba(212,175,55,0.6)":"rgba(255,255,255,0.15)";
+    btn.style.color=on?"#D4AF37":"#ccc";
+    btn.textContent=(on?"✓ ":"+")+tag;
+  }
+  sync();
+  btn.onclick=()=>{
+    const ex=S.builder.find(b=>b.title===bldTitle);
+    if(ex){S.builder=S.builder.filter(x=>x.builderId!==ex.builderId);save();updMN();}
+    else{
+      const catMap={Mood:"production",Instruments:"arrangement",Vocals:"vocal",Beats:"beats",Samples:"samples",SoundDesign:"sounddesign"};
+      const cat=catMap[catType]||"style";
+      const block={id:uid(),builderId:uid(),title:bldTitle,category:cat,tags:[tag],content:desc||tag,rating:3,created:Date.now(),versions:[]};
+      S.builder.push(block);save();updMN();
+    }
+    sync();
+  };
+  return btn;
+}
+const bg=h2("div",{style:{position:"fixed",inset:"0",background:"rgba(0,0,0,0.65)",zIndex:"500",display:"none"}});
+const panel=h2("div",{style:{position:"fixed",bottom:"0",left:"0",right:"0",maxHeight:"78vh",background:"linear-gradient(to bottom,#131a2e,#0d1220)",borderRadius:"20px 20px 0 0",padding:"0 16px 24px",overflowY:"auto",zIndex:"501",boxShadow:"0 -8px 60px rgba(0,0,0,0.7)"}});
+bg.onclick=(e)=>{if(e.target===bg)bg.style.display="none";};
+// Header
+const hdr=h2("div",{style:{position:"sticky",top:"0",background:"linear-gradient(to bottom,#131a2e 80%,transparent)",padding:"14px 0 8px",zIndex:"1",display:"flex",justifyContent:"space-between",alignItems:"center"}});
+hdr.appendChild(h2("div",{},[
+  Object.assign(h2("div",{style:{fontSize:"18px",fontWeight:"800",color:"#fff"}}),[document.createTextNode("Tags")]),
+  Object.assign(h2("div",{style:{fontSize:"11px",color:"rgba(255,255,255,0.4)",marginTop:"2px"}}),[document.createTextNode("Tap to add · tap again to remove · close when done")])
+]));
+const closeBtn=h2("button",{style:{padding:"8px 16px",borderRadius:"10px",border:"1px solid rgba(255,255,255,0.12)",background:"rgba(255,255,255,0.06)",color:"rgba(255,255,255,0.7)",fontSize:"12px",fontWeight:"600",cursor:"pointer"}});
+closeBtn.textContent="✕ Done";
+closeBtn.onclick=()=>{bg.style.display="none";};
+hdr.appendChild(closeBtn);
+panel.appendChild(hdr);
+panel.appendChild(tsec("🎭 Mood",MOOD_TAGS.filter(t=>TAG_DESCRIPTORS[t]).map(t=>makeTagBtn(t,"Mood"))));
+panel.appendChild(tsec("🎸 Instruments",TAG_PALETTE.Instruments.filter(t=>TAG_DESCRIPTORS[t]).map(t=>makeTagBtn(t,"Instruments"))));
+panel.appendChild(tsec("🗣️ Vocals",TAG_PALETTE.Vocals.filter(t=>TAG_DESCRIPTORS[t]).map(t=>makeTagBtn(t,"Vocals"))));
+panel.appendChild(tsec("🥁 Drums/Beats",["boom-bap-drums","trap-drums","live-drums","breakbeat","four-on-floor","half-time"].map(t=>makeTagBtn(t,"Beats"))));
+panel.appendChild(tsec("🔁 Samples/Loops",["drum-loop","melody-loop","bass-loop","chord-loop","ambient-loop","one-shot","resample-source","chop-ready","stem-ready"].map(t=>makeTagBtn(t,"Samples"))));
+panel.appendChild(tsec("✨ Sound Design",["sidechain","vinyl-texture","tape-saturation","bitcrushed","riser","impact","foley","vocal-chop","transition-fx","lo-fi-process","auto-filter"].map(t=>makeTagBtn(t,"SoundDesign"))));
+panel.appendChild(tsec("🎹 Synths",["moog-bass","juno-pad","jupiter-pad","prophet-lead","dx7-keys","arp-synth","supersaw","sub-bass","pluck-synth","analog-lead","fm-bass","wobble-bass","pad-evolving"].map(t=>makeTagBtn(t,"Instruments"))));
+panel.appendChild(tsec("🔊 Bass",["808","moog-bass","upright-bass","p-bass","slap-bass","fretless-bass","synth-bass","distorted-bass","reese-bass","fm-bass","sub-bass"].map(t=>makeTagBtn(t,"Instruments"))));
+panel.appendChild(tsec("🎸 Guitars",["acoustic-guitar","clean-electric","overdriven","distorted-guitar","wah-guitar","12-string","nylon-guitar","pedal-steel","funk-guitar"].map(t=>makeTagBtn(t,"Instruments"))));
+panel.appendChild(tsec("🎹 Keys/Boards",["Rhodes","wurlitzer","piano","organ","clavinet","mellotron","harpsichord","celeste","b3-organ","accordion","dx7-keys"].map(t=>makeTagBtn(t,"Instruments"))));
+panel.appendChild(tsec("🪘 Percussion",["congas","bongos","tambourine","shaker","djembe","timbales","cowbell","finger-snaps","woodblock","cajon","tabla","handclaps"].map(t=>makeTagBtn(t,"Instruments"))));
+panel.appendChild(tsec("💥 One-Shots",["kick-punchy","kick-boomy","snare-crack","snare-fat","clap-layered","hihat-closed","hihat-open","rim-shot","perc-hit","one-shot"].map(t=>makeTagBtn(t,"SoundDesign"))));
+panel.appendChild(tsec("🎚️ Mix Techniques",["parallel-comp","stereo-width","saturation","reverb-plate","reverb-room","reverb-hall","delay-tape","delay-ping","multiband-comp","mid-side","sidechain"].map(t=>makeTagBtn(t,"SoundDesign"))));
+bg.appendChild(panel);
+document.body.appendChild(bg);
+window._tagModalBg=bg;
+})();
+
+render();
 </script>
 </body>
 </html>
