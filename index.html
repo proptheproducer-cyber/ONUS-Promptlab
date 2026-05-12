@@ -490,11 +490,11 @@ document.body.removeChild(ta);}
 
 function addBld(id){const p=S.prompts.find(x=>x.id===id);if(!p||S.builder.find(x=>x.id===id))return;S.builder.push({...p,builderId:uid()});save();render();updMN();toast(`Added "${p.title}"`);}
 // Add a descriptor block to builder from tag palette click
-function addDescToBuilder(title,category,content,tags){
+function addDescToBuilder(title,category,content,tags,silent){
 const catMap={"Mood":"production","Instruments":"arrangement","Vocals":"vocal","Beats":"beats","Samples":"samples","SoundDesign":"sounddesign"};
 const cat=catMap[category]||category;
-const block={id:uid(),builderId:uid(),title:title,category:cat,tags:tags||[],content:content,rating:3,created:Date.now(),versions:[]};
-S.builder.push(block);save();render();updMN();toast(`Added: ${title}`);}
+const block={id:uid(),builderId:uid(),title,category:cat,tags:tags||[],content,rating:3,created:Date.now(),versions:[]};
+S.builder.push(block);save();updMN();if(!silent)toast(`Added: ${title}`);}
 // Edit builder block content inline
 function editBldContent(bid,newContent){const b=S.builder.find(x=>x.builderId===bid);if(b){b.content=newContent;save();}}
 function rmBld(bid){S.builder=S.builder.filter(x=>x.builderId!==bid);save();render();updMN();}
@@ -977,8 +977,8 @@ btn.onclick=()=>{
     S.builder=S.builder.filter(x=>x.builderId!==existing.builderId);
     save();updMN();
   }else{
-    if(desc){addDescToBuilder(bldTitle,catType==="Mood"?"production":catType==="Instruments"?"arrangement":catType==="Vocals"?"vocal":catType==="Beats"?"beats":catType==="Samples"?"samples":catType==="SoundDesign"?"sounddesign":"style",desc,[tag]);}
-    else{addDescToBuilder(tag,"style",tag,[tag]);}
+    if(desc){addDescToBuilder(bldTitle,catType==="Mood"?"production":catType==="Instruments"?"arrangement":catType==="Vocals"?"vocal":catType==="Beats"?"beats":catType==="Samples"?"samples":catType==="SoundDesign"?"sounddesign":"style",desc,[tag],true);}
+    else{addDescToBuilder(tag,"style",tag,[tag],true);}
   }
   syncBtn();
 };
