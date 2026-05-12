@@ -1318,9 +1318,9 @@ render();}},"⚡ GENERATE");
 w.append(genBtn);
 // ═── TAGS MODAL — fully wired, lives in Create ──═
 w.append(h("div",{style:{marginTop:"6px",marginBottom:"2px"}},[
-  h("button",{className:"gb",style:{width:"100%",padding:"10px",fontSize:"12px",fontWeight:"700",background:"linear-gradient(135deg,rgba(52,211,153,0.1),rgba(52,211,153,0.05))",color:"var(--green)",borderColor:"rgba(52,211,153,0.2)"},onClick:()=>{S.sideCollapsed["tags"]=S.sideCollapsed["tags"]?false:true;save();render();}},"🏷️ Production Tags"+(S.sideCollapsed["tags"]===false?" — tap sections to add to Builder":""))
+  h("button",{className:"gb",style:{width:"100%",padding:"10px",fontSize:"12px",fontWeight:"700",background:"linear-gradient(135deg,rgba(52,211,153,0.1),rgba(52,211,153,0.05))",color:"var(--green)",borderColor:"rgba(52,211,153,0.2)"},onClick:()=>{S.sideCollapsed["tags"]=S.sideCollapsed["tags"]===false?true:false;save();render();}},"🏷️ Production Tags"+(S.sideCollapsed["tags"]===false?" — tap sections to add to Builder":""))
 ]));
-if(!S.sideCollapsed["tags"]){
+if(S.sideCollapsed["tags"]===false){
 function tsec(key,label,items){const cl=S.sideCollapsed[key];
 return h("div",{style:{marginBottom:"6px"}},[
 h("div",{style:{fontSize:"11px",fontWeight:"700",color:"var(--gold)",padding:"6px 0",cursor:"pointer",borderBottom:"1px solid var(--bd)"},onClick:()=>{S.sideCollapsed[key]=!cl;save();render();}},[(cl?"▶  ":"▼  ")+label]),
