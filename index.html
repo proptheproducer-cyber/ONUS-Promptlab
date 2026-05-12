@@ -1316,32 +1316,31 @@ if(!result||typeof result!=="object")return;
 S.aiResult=result;try{localStorage.setItem("onus3-ai",JSON.stringify(result))}catch(ex){}
 render();}},"⚡ GENERATE");
 w.append(genBtn);
-// ═── TAGS MODAL — fully wired, lives in Create ──═
-w.append(h("div",{style:{marginTop:"6px",marginBottom:"2px"}},[
-  h("button",{className:"gb",style:{width:"100%",padding:"10px",fontSize:"12px",fontWeight:"700",background:"linear-gradient(135deg,rgba(52,211,153,0.1),rgba(52,211,153,0.05))",color:"var(--green)",borderColor:"rgba(52,211,153,0.2)"},onClick:()=>{S.sideCollapsed["tags"]=S.sideCollapsed["tags"]===false?true:false;save();render();}},"🏷️ Production Tags"+(S.sideCollapsed["tags"]===false?" — tap sections to add to Builder":""))
-]));
-if(S.sideCollapsed["tags"]===false){
-function tsec(key,label,items){const cl=S.sideCollapsed[key];
-return h("div",{style:{marginBottom:"6px"}},[
-h("div",{style:{fontSize:"11px",fontWeight:"700",color:"var(--gold)",padding:"6px 0",cursor:"pointer",borderBottom:"1px solid var(--bd)"},onClick:()=>{S.sideCollapsed[key]=!cl;save();render();}},[(cl?"▶  ":"▼  ")+label]),
-cl?null:h("div",{className:"tc",style:{marginBottom:"6px",marginTop:"6px"}},items)].filter(Boolean));}
-const modalBg=h("div",{style:{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:200,animation:"fadeUp .2s ease"},onClick:(e)=>{if(e.target===modalBg){S.sideCollapsed["tags"]=true;save();render();}}});
-const modal=h("div",{style:{position:"fixed",bottom:0,left:0,right:0,maxHeight:"75vh",background:"linear-gradient(to bottom, #131a2e, #0d1220)",borderRadius:"20px 20px 0 0",padding:"0 16px calc(16px + var(--sb))",overflowY:"auto",zIndex:201,animation:"slideUp .25s ease",boxShadow:"0 -8px 60px rgba(0,0,0,0.6)",WebkitOverflowScrolling:"touch"}});
-const modalHdr=h("div",{style:{position:"sticky",top:0,background:"linear-gradient(to bottom, #131a2e, #131a2e, transparent)",padding:"12px 0 8px",zIndex:1}});
+// ═── TAGS MODAL — always in DOM, toggled via display only, no re-render ──═
+(()=>{
+function tsec(key,label,items){
+  const body=h("div",{className:"tc",style:{marginBottom:"6px",marginTop:"6px"}},items);
+  const hd=h("div",{style:{fontSize:"11px",fontWeight:"700",color:"var(--gold)",padding:"6px 0",cursor:"pointer",borderBottom:"1px solid var(--bd)"}},["▼  "+label]);
+  let open=true;
+  hd.onclick=()=>{open=!open;body.style.display=open?"flex":"none";hd.textContent=(open?"▼  ":"▶  ")+label;};
+  return h("div",{style:{marginBottom:"6px"}},[hd,body]);
+}
+const modalBg=h("div",{style:{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:200,display:"none"}});
+const modal=h("div",{style:{position:"fixed",bottom:0,left:0,right:0,maxHeight:"75vh",background:"linear-gradient(to bottom,#131a2e,#0d1220)",borderRadius:"20px 20px 0 0",padding:"0 16px calc(16px + var(--sb))",overflowY:"auto",zIndex:201,boxShadow:"0 -8px 60px rgba(0,0,0,0.6)",WebkitOverflowScrolling:"touch"}});
+function closeTagModal(){modalBg.style.display="none";}
+function openTagModal(){modalBg.style.display="block";}
+modalBg.onclick=(e)=>{if(e.target===modalBg)closeTagModal();};
+// Header
+const modalHdr=h("div",{style:{position:"sticky",top:0,background:"linear-gradient(to bottom,#131a2e,#131a2e,transparent)",padding:"12px 0 8px",zIndex:1}});
 modalHdr.append(h("div",{style:{width:"40px",height:"4px",borderRadius:"2px",background:"rgba(255,255,255,0.2)",margin:"0 auto 12px"}}));
 modalHdr.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},[
-h("div",{},[
-  h("div",{style:{fontSize:"18px",fontWeight:"800",color:"#fff"}},"Production Tags"),
-  h("div",{style:{fontSize:"11px",color:"var(--tx3)",marginTop:"2px"}},"Tap any tag to add its description to your Builder"),
-]),
-h("button",{style:{padding:"8px 16px",borderRadius:"10px",border:"1px solid var(--bd)",background:"rgba(255,255,255,0.05)",color:"var(--tx2)",fontSize:"12px",fontWeight:"600",cursor:"pointer",fontFamily:"var(--fn)"},onClick:()=>{S.sideCollapsed["tags"]=true;save();render();}},"✕ Done"),
+  h("div",{},[
+    h("div",{style:{fontSize:"18px",fontWeight:"800",color:"#fff"}},"Production Tags"),
+    h("div",{style:{fontSize:"11px",color:"var(--tx3)",marginTop:"2px"}},"Tap any tag to add its description to your Builder"),
+  ]),
+  h("button",{style:{padding:"8px 16px",borderRadius:"10px",border:"1px solid var(--bd)",background:"rgba(255,255,255,0.05)",color:"var(--tx2)",fontSize:"12px",fontWeight:"600",cursor:"pointer",fontFamily:"var(--fn)"},onClick:closeTagModal},"✕ Done"),
 ]));
 modal.append(modalHdr);
-if(S.builder.length>0){
-modal.append(h("div",{style:{padding:"8px",borderRadius:"8px",background:"var(--gold-dim)",marginBottom:"10px"}},[
-h("div",{style:{fontSize:"10px",fontWeight:"700",color:"var(--gold)",marginBottom:"4px"}},"⚡ "+S.builder.length+" in Builder"),
-h("div",{style:{display:"flex",gap:"3px",flexWrap:"wrap"}},S.builder.slice(0,8).map(b=>h("span",{style:{fontSize:"8px",padding:"2px 6px",borderRadius:"4px",background:"rgba(212,175,55,0.15)",color:"var(--gold)"}},b.title.slice(0,20)))),
-]));}
 modal.append(h("div",{style:{fontSize:"9px",color:"var(--tx3)",marginBottom:"8px"}},"Tap any tag to add its production description to your Builder."));
 modal.append(tsec("mood","🎭 Mood",MOOD_TAGS.filter(t=>TAG_DESCRIPTORS[t]).map(t=>descTag(t,"Mood"))));
 modal.append(tsec("inst","🎸 Instruments",TAG_PALETTE.Instruments.filter(t=>TAG_DESCRIPTORS[t]).map(t=>descTag(t,"Instruments"))));
@@ -1357,7 +1356,12 @@ modal.append(tsec("perc","🪘 Percussion",["congas","bongos","tambourine","shak
 modal.append(tsec("oneshots","💥 One-Shots",["kick-punchy","kick-boomy","snare-crack","snare-fat","clap-layered","hihat-closed","hihat-open","rim-shot","perc-hit","one-shot"].map(t=>descTag(t,"SoundDesign"))));
 modal.append(tsec("mixtech","🎚️ Mix Techniques",["parallel-comp","stereo-width","saturation","reverb-plate","reverb-room","reverb-hall","delay-tape","delay-ping","multiband-comp","mid-side","sidechain"].map(t=>descTag(t,"SoundDesign"))));
 modalBg.append(modal);
-app.append(modalBg);}
+app.append(modalBg);
+// The button — just flips display, zero re-render
+const tagBtn=h("button",{className:"gb",style:{width:"100%",padding:"10px",fontSize:"12px",fontWeight:"700",background:"linear-gradient(135deg,rgba(52,211,153,0.1),rgba(52,211,153,0.05))",color:"var(--green)",borderColor:"rgba(52,211,153,0.2)",marginTop:"6px"}},"🏷️ Production Tags");
+tagBtn.onclick=()=>{modalBg.style.display==="none"?openTagModal():closeTagModal();};
+w.append(tagBtn);
+})();
 // View What Was Sent button
 if(S.lastSent){
 w.append(h("button",{className:"ob",style:{width:"100%",marginTop:"8px",fontSize:"11px",padding:"10px",border:"1px dashed rgba(52,211,153,0.25)",color:"var(--green)",background:"rgba(52,211,153,0.04)"},onClick:()=>{
