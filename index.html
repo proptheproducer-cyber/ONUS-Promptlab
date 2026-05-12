@@ -960,9 +960,7 @@ h("div",{className:"hdr-l"},[h("div",{className:"logo"},"⚡"),h("div",{},[h("di
 h("nav",{className:"nav"},["create","library","saved"].map(k=>{const labels={create:"🤖 Create",library:"📚 Library",saved:"⚡ Masters"};const btn=h("button",{className:"nb"+(S.view===k||(k==="create"&&["create","timeline","builder","scorecard","ai","finalize"].includes(S.view))||(k==="library"&&S.view==="library")?" a":""),onClick:()=>switchView(k)},labels[k]);if(k==="library"&&S.builder.length>0)btn.append(h("span",{className:"bdg"},String(S.builder.length)));return btn;}))
 ]));
 
-// ═══ LIBRARY ═══
-if(S.view==="library"){
-const fl=getF();const cc={};CATEGORIES.forEach(c=>cc[c.id]=S.prompts.filter(p=>p.category===c.id).length);
+// ═══ SHARED: descTag — used in Tags modal (Create) ═══
 function descTag(tag,catType){
 const desc=TAG_DESCRIPTORS[tag];
 const inBld=S.builder.some(b=>b.title===tag+" — "+catType);
@@ -970,6 +968,10 @@ return h("button",{className:"tp"+(inBld?" a":""),onClick:()=>{
 if(desc){addDescToBuilder(tag+" — "+catType,catType==="Mood"?"production":catType==="Instruments"?"arrangement":catType==="Vocals"?"vocal":catType==="Beats"?"beats":catType==="Samples"?"samples":catType==="SoundDesign"?"sounddesign":"style",desc,[tag]);}
 else{addDescToBuilder(tag,"style",tag,[tag]);}
 }},inBld?"✓ "+tag:"+ "+tag);}
+
+// ═══ LIBRARY ═══
+if(S.view==="library"){
+const fl=getF();const cc={};CATEGORIES.forEach(c=>cc[c.id]=S.prompts.filter(p=>p.category===c.id).length);
 
 const libWrap=h("div",{style:{maxWidth:"900px",margin:"0 auto",padding:"12px"}});
 
@@ -1068,47 +1070,6 @@ h("button",{className:"gb",style:{padding:"9px 14px",fontSize:"11px"},onClick:()
 ]),
 ]));}
 
-// ═── TAG MODAL (floating overlay, doesn't push content) ──═
-if(!S.sideCollapsed["tags"]){
-function tsec(key,label,items){const cl=S.sideCollapsed[key];
-return h("div",{style:{marginBottom:"6px"}},[
-h("div",{style:{fontSize:"11px",fontWeight:"700",color:"var(--gold)",padding:"6px 0",cursor:"pointer",borderBottom:"1px solid var(--bd)"},onClick:()=>{S.sideCollapsed[key]=!cl;save();render();}},[(cl?"▶  ":"▼  ")+label]),
-cl?null:h("div",{className:"tc",style:{marginBottom:"6px",marginTop:"6px"}},items)].filter(Boolean));}
-// Create floating modal
-const modalBg=h("div",{style:{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:200,animation:"fadeUp .2s ease"},onClick:(e)=>{if(e.target===modalBg){S.sideCollapsed["tags"]=true;save();render();}}});
-const modal=h("div",{style:{position:"fixed",bottom:0,left:0,right:0,maxHeight:"75vh",background:"linear-gradient(to bottom, #131a2e, #0d1220)",borderRadius:"20px 20px 0 0",padding:"0 16px calc(16px + var(--sb))",overflowY:"auto",zIndex:201,animation:"slideUp .25s ease",boxShadow:"0 -8px 60px rgba(0,0,0,0.6)",WebkitOverflowScrolling:"touch"}});
-// Sticky header
-const modalHdr=h("div",{style:{position:"sticky",top:0,background:"linear-gradient(to bottom, #131a2e, #131a2e, transparent)",padding:"12px 0 8px",zIndex:1}});
-modalHdr.append(h("div",{style:{width:"40px",height:"4px",borderRadius:"2px",background:"rgba(255,255,255,0.2)",margin:"0 auto 12px"}}));
-modalHdr.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},[
-h("div",{},[
-h("div",{style:{fontSize:"18px",fontWeight:"800",color:"#fff"}},"Production Tags"),
-h("div",{style:{fontSize:"11px",color:"var(--tx3)",marginTop:"2px"}},"Tap any tag to add its description to your Builder"),
-]),
-h("button",{style:{padding:"8px 16px",borderRadius:"10px",border:"1px solid var(--bd)",background:"rgba(255,255,255,0.05)",color:"var(--tx2)",fontSize:"12px",fontWeight:"600",cursor:"pointer",fontFamily:"var(--fn)"},onClick:()=>{S.sideCollapsed["tags"]=true;save();render();}},"✕ Done"),
-]));
-modal.append(modalHdr);
-if(S.builder.length>0){
-modal.append(h("div",{style:{padding:"8px",borderRadius:"8px",background:"var(--gold-dim)",marginBottom:"10px"}},[
-h("div",{style:{fontSize:"10px",fontWeight:"700",color:"var(--gold)",marginBottom:"4px"}},"⚡ "+S.builder.length+" in Builder"),
-h("div",{style:{display:"flex",gap:"3px",flexWrap:"wrap"}},S.builder.slice(0,8).map(b=>h("span",{style:{fontSize:"8px",padding:"2px 6px",borderRadius:"4px",background:"rgba(212,175,55,0.15)",color:"var(--gold)"}},b.title.slice(0,20)))),
-]));}
-modal.append(h("div",{style:{fontSize:"9px",color:"var(--tx3)",marginBottom:"8px"}},"Tap any tag to add its production description to your Builder. Tap again to close."));
-modal.append(tsec("mood","🎭 Mood",MOOD_TAGS.filter(t=>TAG_DESCRIPTORS[t]).map(t=>descTag(t,"Mood"))));
-modal.append(tsec("inst","🎸 Instruments",TAG_PALETTE.Instruments.filter(t=>TAG_DESCRIPTORS[t]).map(t=>descTag(t,"Instruments"))));
-modal.append(tsec("vocal","🗣️ Vocals",TAG_PALETTE.Vocals.filter(t=>TAG_DESCRIPTORS[t]).map(t=>descTag(t,"Vocals"))));
-modal.append(tsec("beats","🥁 Drums/Beats",["boom-bap-drums","trap-drums","live-drums","breakbeat","four-on-floor","half-time"].map(t=>descTag(t,"Beats"))));
-modal.append(tsec("loops","🔁 Samples/Loops",["drum-loop","melody-loop","bass-loop","chord-loop","ambient-loop","one-shot","resample-source","chop-ready","stem-ready"].map(t=>descTag(t,"Samples"))));
-modal.append(tsec("sfx","✨ Sound Design",["sidechain","vinyl-texture","tape-saturation","bitcrushed","riser","impact","foley","vocal-chop","transition-fx","lo-fi-process","auto-filter"].map(t=>descTag(t,"SoundDesign"))));
-modal.append(tsec("synths","🎹 Synths",["moog-bass","juno-pad","jupiter-pad","prophet-lead","dx7-keys","arp-synth","supersaw","sub-bass","pluck-synth","analog-lead","fm-bass","wobble-bass","pad-evolving"].map(t=>descTag(t,"Instruments"))));
-modal.append(tsec("basstypes","🔊 Bass",["808","moog-bass","upright-bass","p-bass","slap-bass","fretless-bass","synth-bass","distorted-bass","reese-bass","fm-bass","sub-bass"].map(t=>descTag(t,"Instruments"))));
-modal.append(tsec("guitars","🎸 Guitars",["acoustic-guitar","clean-electric","overdriven","distorted-guitar","wah-guitar","12-string","nylon-guitar","pedal-steel","funk-guitar"].map(t=>descTag(t,"Instruments"))));
-modal.append(tsec("keys2","🎹 Keys/Boards",["Rhodes","wurlitzer","piano","organ","clavinet","mellotron","harpsichord","celeste","b3-organ","accordion","dx7-keys"].map(t=>descTag(t,"Instruments"))));
-modal.append(tsec("perc","🪘 Percussion",["congas","bongos","tambourine","shaker","djembe","timbales","cowbell","finger-snaps","woodblock","cajon","tabla","handclaps"].map(t=>descTag(t,"Instruments"))));
-modal.append(tsec("oneshots","💥 One-Shots",["kick-punchy","kick-boomy","snare-crack","snare-fat","clap-layered","hihat-closed","hihat-open","rim-shot","perc-hit","one-shot"].map(t=>descTag(t,"SoundDesign"))));
-modal.append(tsec("mixtech","🎚️ Mix Techniques",["parallel-comp","stereo-width","saturation","reverb-plate","reverb-room","reverb-hall","delay-tape","delay-ping","multiband-comp","mid-side","sidechain"].map(t=>descTag(t,"SoundDesign"))));
-modalBg.append(modal);
-app.append(modalBg);}
 // ═── EDIT FORM (modal overlay) ──═
 if(S.edit){app.append(renderForm(S.edit));}
 
@@ -1355,10 +1316,48 @@ if(!result||typeof result!=="object")return;
 S.aiResult=result;try{localStorage.setItem("onus3-ai",JSON.stringify(result))}catch(ex){}
 render();}},"⚡ GENERATE");
 w.append(genBtn);
-// ═── TAGS BUTTON — in Create, above results ──═
-w.append(h("div",{style:{marginTop:"6px",marginBottom:"2px"}},[ 
-  h("button",{className:"gb",style:{width:"100%",padding:"10px",fontSize:"12px",fontWeight:"700",background:"linear-gradient(135deg,rgba(52,211,153,0.1),rgba(52,211,153,0.05))",color:"var(--green)",borderColor:"rgba(52,211,153,0.2)"},onClick:()=>{S.sideCollapsed["tags"]=S.sideCollapsed["tags"]?false:true;save();render();}},"🏷️ Production Tags — tap to add descriptors to your prompt")
+// ═── TAGS MODAL — fully wired, lives in Create ──═
+w.append(h("div",{style:{marginTop:"6px",marginBottom:"2px"}},[
+  h("button",{className:"gb",style:{width:"100%",padding:"10px",fontSize:"12px",fontWeight:"700",background:"linear-gradient(135deg,rgba(52,211,153,0.1),rgba(52,211,153,0.05))",color:"var(--green)",borderColor:"rgba(52,211,153,0.2)"},onClick:()=>{S.sideCollapsed["tags"]=S.sideCollapsed["tags"]?false:true;save();render();}},"🏷️ Production Tags"+(S.sideCollapsed["tags"]===false?" — tap sections to add to Builder":""))
 ]));
+if(!S.sideCollapsed["tags"]){
+function tsec(key,label,items){const cl=S.sideCollapsed[key];
+return h("div",{style:{marginBottom:"6px"}},[
+h("div",{style:{fontSize:"11px",fontWeight:"700",color:"var(--gold)",padding:"6px 0",cursor:"pointer",borderBottom:"1px solid var(--bd)"},onClick:()=>{S.sideCollapsed[key]=!cl;save();render();}},[(cl?"▶  ":"▼  ")+label]),
+cl?null:h("div",{className:"tc",style:{marginBottom:"6px",marginTop:"6px"}},items)].filter(Boolean));}
+const modalBg=h("div",{style:{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:200,animation:"fadeUp .2s ease"},onClick:(e)=>{if(e.target===modalBg){S.sideCollapsed["tags"]=true;save();render();}}});
+const modal=h("div",{style:{position:"fixed",bottom:0,left:0,right:0,maxHeight:"75vh",background:"linear-gradient(to bottom, #131a2e, #0d1220)",borderRadius:"20px 20px 0 0",padding:"0 16px calc(16px + var(--sb))",overflowY:"auto",zIndex:201,animation:"slideUp .25s ease",boxShadow:"0 -8px 60px rgba(0,0,0,0.6)",WebkitOverflowScrolling:"touch"}});
+const modalHdr=h("div",{style:{position:"sticky",top:0,background:"linear-gradient(to bottom, #131a2e, #131a2e, transparent)",padding:"12px 0 8px",zIndex:1}});
+modalHdr.append(h("div",{style:{width:"40px",height:"4px",borderRadius:"2px",background:"rgba(255,255,255,0.2)",margin:"0 auto 12px"}}));
+modalHdr.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},[
+h("div",{},[
+  h("div",{style:{fontSize:"18px",fontWeight:"800",color:"#fff"}},"Production Tags"),
+  h("div",{style:{fontSize:"11px",color:"var(--tx3)",marginTop:"2px"}},"Tap any tag to add its description to your Builder"),
+]),
+h("button",{style:{padding:"8px 16px",borderRadius:"10px",border:"1px solid var(--bd)",background:"rgba(255,255,255,0.05)",color:"var(--tx2)",fontSize:"12px",fontWeight:"600",cursor:"pointer",fontFamily:"var(--fn)"},onClick:()=>{S.sideCollapsed["tags"]=true;save();render();}},"✕ Done"),
+]));
+modal.append(modalHdr);
+if(S.builder.length>0){
+modal.append(h("div",{style:{padding:"8px",borderRadius:"8px",background:"var(--gold-dim)",marginBottom:"10px"}},[
+h("div",{style:{fontSize:"10px",fontWeight:"700",color:"var(--gold)",marginBottom:"4px"}},"⚡ "+S.builder.length+" in Builder"),
+h("div",{style:{display:"flex",gap:"3px",flexWrap:"wrap"}},S.builder.slice(0,8).map(b=>h("span",{style:{fontSize:"8px",padding:"2px 6px",borderRadius:"4px",background:"rgba(212,175,55,0.15)",color:"var(--gold)"}},b.title.slice(0,20)))),
+]));}
+modal.append(h("div",{style:{fontSize:"9px",color:"var(--tx3)",marginBottom:"8px"}},"Tap any tag to add its production description to your Builder."));
+modal.append(tsec("mood","🎭 Mood",MOOD_TAGS.filter(t=>TAG_DESCRIPTORS[t]).map(t=>descTag(t,"Mood"))));
+modal.append(tsec("inst","🎸 Instruments",TAG_PALETTE.Instruments.filter(t=>TAG_DESCRIPTORS[t]).map(t=>descTag(t,"Instruments"))));
+modal.append(tsec("vocal","🗣️ Vocals",TAG_PALETTE.Vocals.filter(t=>TAG_DESCRIPTORS[t]).map(t=>descTag(t,"Vocals"))));
+modal.append(tsec("beats","🥁 Drums/Beats",["boom-bap-drums","trap-drums","live-drums","breakbeat","four-on-floor","half-time"].map(t=>descTag(t,"Beats"))));
+modal.append(tsec("loops","🔁 Samples/Loops",["drum-loop","melody-loop","bass-loop","chord-loop","ambient-loop","one-shot","resample-source","chop-ready","stem-ready"].map(t=>descTag(t,"Samples"))));
+modal.append(tsec("sfx","✨ Sound Design",["sidechain","vinyl-texture","tape-saturation","bitcrushed","riser","impact","foley","vocal-chop","transition-fx","lo-fi-process","auto-filter"].map(t=>descTag(t,"SoundDesign"))));
+modal.append(tsec("synths","🎹 Synths",["moog-bass","juno-pad","jupiter-pad","prophet-lead","dx7-keys","arp-synth","supersaw","sub-bass","pluck-synth","analog-lead","fm-bass","wobble-bass","pad-evolving"].map(t=>descTag(t,"Instruments"))));
+modal.append(tsec("basstypes","🔊 Bass",["808","moog-bass","upright-bass","p-bass","slap-bass","fretless-bass","synth-bass","distorted-bass","reese-bass","fm-bass","sub-bass"].map(t=>descTag(t,"Instruments"))));
+modal.append(tsec("guitars","🎸 Guitars",["acoustic-guitar","clean-electric","overdriven","distorted-guitar","wah-guitar","12-string","nylon-guitar","pedal-steel","funk-guitar"].map(t=>descTag(t,"Instruments"))));
+modal.append(tsec("keys2","🎹 Keys/Boards",["Rhodes","wurlitzer","piano","organ","clavinet","mellotron","harpsichord","celeste","b3-organ","accordion","dx7-keys"].map(t=>descTag(t,"Instruments"))));
+modal.append(tsec("perc","🪘 Percussion",["congas","bongos","tambourine","shaker","djembe","timbales","cowbell","finger-snaps","woodblock","cajon","tabla","handclaps"].map(t=>descTag(t,"Instruments"))));
+modal.append(tsec("oneshots","💥 One-Shots",["kick-punchy","kick-boomy","snare-crack","snare-fat","clap-layered","hihat-closed","hihat-open","rim-shot","perc-hit","one-shot"].map(t=>descTag(t,"SoundDesign"))));
+modal.append(tsec("mixtech","🎚️ Mix Techniques",["parallel-comp","stereo-width","saturation","reverb-plate","reverb-room","reverb-hall","delay-tape","delay-ping","multiband-comp","mid-side","sidechain"].map(t=>descTag(t,"SoundDesign"))));
+modalBg.append(modal);
+app.append(modalBg);}
 // View What Was Sent button
 if(S.lastSent){
 w.append(h("button",{className:"ob",style:{width:"100%",marginTop:"8px",fontSize:"11px",padding:"10px",border:"1px dashed rgba(52,211,153,0.25)",color:"var(--green)",background:"rgba(52,211,153,0.04)"},onClick:()=>{
