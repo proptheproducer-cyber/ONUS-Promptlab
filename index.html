@@ -1172,7 +1172,7 @@ w.append(h("div",{style:{display:"flex",gap:"5px",marginBottom:"10px",flexWrap:"
 h("span",{style:{fontSize:"10px",color:"var(--tx3)",fontWeight:"600",display:"flex",alignItems:"center",marginRight:"4px"}},"🧹"),
 S.aiResult?h("button",{className:"ob",style:{fontSize:"10px",padding:"6px 10px"},onClick:()=>{
 const old=S.aiResult;const oldContent=old.lyrics_prompt?"=== LYRICS ===\n"+(old.lyrics_prompt||"")+"\n\n=== STYLE ===\n"+(old.style_prompt||""):old.style_box_2?"=== STYLE BOX 2 ===\n"+(old.style_box_2||""):"(archived)";
-S.prompts.unshift({id:uid(),title:"[Archived] "+(old.title||"AI Prompt")+" — "+new Date().toLocaleDateString(),category:"master",tags:old.tags||[],content:oldContent,rating:4,created:Date.now(),versions:[]});
+S.prompts.unshift({id:uid(),title:"[Archived — "+(S.promptVersion==="v3"?"V3 Genius":S.promptVersion==="v2"?"V2 Floss":"V1 ONUS")+"] "+(old.title||"AI Prompt")+" — "+new Date().toLocaleDateString(),category:"master",tags:old.tags||[],content:oldContent,rating:4,created:Date.now(),versions:[]});
 S.aiResult=null;S.aiDesc="";try{localStorage.removeItem("onus3-ai");localStorage.removeItem("onus3-aid");}catch(ex){}save();render();toast("Archived & cleared");
 }},"📦 Archive Results"):null,
 S.aiResult?h("button",{style:{fontSize:"10px",padding:"6px 10px",borderRadius:"8px",border:"1px solid rgba(248,113,113,0.2)",background:"rgba(248,113,113,0.06)",color:"var(--red)",cursor:"pointer",fontFamily:"var(--fn)",fontWeight:"600"},onClick:()=>{
@@ -1183,7 +1183,7 @@ S.aiDesc?h("button",{className:"ob",style:{fontSize:"10px",padding:"6px 10px"},o
 h("button",{style:{fontSize:"10px",padding:"6px 10px",borderRadius:"8px",border:"1px solid rgba(248,113,113,0.25)",background:"rgba(248,113,113,0.08)",color:"var(--red)",cursor:"pointer",fontFamily:"var(--fn)",fontWeight:"700",marginLeft:"auto"},onClick:()=>{
 if(confirm("Clear EVERYTHING and start fresh?")){
 if(S.aiResult){const old=S.aiResult;const oldContent=old.lyrics_prompt?"=== LYRICS ===\n"+(old.lyrics_prompt||"")+"\n\n=== STYLE ===\n"+(old.style_prompt||""):old.style_box_2?"=== STYLE BOX 2 ===\n"+(old.style_box_2||""):"(archived)";
-S.prompts.unshift({id:uid(),title:"[Archived] "+(old.title||"AI Prompt")+" — "+new Date().toLocaleDateString(),category:"master",tags:old.tags||[],content:oldContent,rating:4,created:Date.now(),versions:[]});}
+S.prompts.unshift({id:uid(),title:"[Archived — "+(S.promptVersion==="v3"?"V3 Genius":S.promptVersion==="v2"?"V2 Floss":"V1 ONUS")+"] "+(old.title||"AI Prompt")+" — "+new Date().toLocaleDateString(),category:"master",tags:old.tags||[],content:oldContent,rating:4,created:Date.now(),versions:[]});}
 S.aiResult=null;S.aiDesc="";S.builder=[];S.timeline=[];
 try{localStorage.removeItem("onus3-ai");localStorage.removeItem("onus3-aid");}catch(ex){}save();render();updMN();toast("Fresh start");}
 }},"💣 Start Fresh"),
@@ -1352,7 +1352,7 @@ else{fullPrompt+="MY REQUEST: Create a song/beat using the structure and creativ
 if(S.aiResult){
 const old=S.aiResult;
 const oldContent=old.lyrics_prompt?"=== LYRICS ===\n"+(old.lyrics_prompt||"")+"\n\n=== STYLE ===\n"+(old.style_prompt||""):old.style_box_2?"=== STYLE BOX 2 ===\n"+(old.style_box_2||"")+"\n\n=== NEGATIVE ===\n"+(old.negative_prompt||""):"(archived)";
-S.prompts.unshift({id:uid(),title:"[Archived] "+(old.title||"AI Prompt")+" — "+new Date().toLocaleDateString(),category:"master",tags:old.tags||[],content:oldContent,rating:4,created:Date.now(),versions:[]});
+S.prompts.unshift({id:uid(),title:"[Archived — "+(S.promptVersion==="v3"?"V3 Genius":S.promptVersion==="v2"?"V2 Floss":"V1 ONUS")+"] "+(old.title||"AI Prompt")+" — "+new Date().toLocaleDateString(),category:"master",tags:old.tags||[],content:oldContent,rating:4,created:Date.now(),versions:[]});
 save();}
 genBtn.textContent="⏳ ONUS writing your hit...";genBtn.disabled=true;
 const result=await aiGenerate(fullPrompt);
@@ -1381,7 +1381,22 @@ body2.append(det);modal.append(body2);overlay.append(modal);document.body.append
 // Show persisted results
 if(S.aiResult){
 const r=S.aiResult;
-w.append(h("div",{style:{fontSize:"14px",fontWeight:"800",color:"var(--gold)",margin:"14px 0 8px"}},"✅ "+(r.title||"Generated Prompt")+" ("+PROMPT_VERSIONS[S.promptVersion]?.name+")"));
+// ═── INLINE QUICK SAVE BAR ──═
+const resultTitle=r.title||"AI Master — "+new Date().toLocaleDateString();
+const qsTitleInp=h("input",{className:"fi",style:{flex:1,fontSize:"13px",fontWeight:"700",padding:"8px 10px"},placeholder:"Name this result…"});
+qsTitleInp.value=resultTitle;
+const qsCatSel=h("select",{className:"fsel",style:{fontSize:"11px",padding:"6px 8px",width:"auto",flexShrink:0}});
+const autoCat=r.lyrics_prompt?"master":r.style_box_2?"style":"master";
+CATEGORIES.forEach(c=>{const o=h("option",{value:c.id},c.icon+" "+c.label);if(c.id===autoCat)o.selected=true;qsCatSel.append(o);});
+const qsSaveBtn=h("button",{className:"gb",style:{padding:"8px 14px",fontSize:"12px",fontWeight:"800",whiteSpace:"nowrap",flexShrink:0}},"💾 Save to Masters");
+qsSaveBtn.addEventListener("click",()=>{
+  const t=qsTitleInp.value.trim()||resultTitle;
+  saveMasterFromAI(Object.assign({},r,{title:t}));
+});
+w.append(h("div",{style:{background:"rgba(212,175,55,0.07)",border:"1px solid rgba(212,175,55,0.25)",borderRadius:"10px",padding:"10px 12px",margin:"14px 0 10px",display:"flex",gap:"6px",alignItems:"center",flexWrap:"wrap"}},[
+  h("span",{style:{fontSize:"10px",color:"var(--gold)",fontWeight:"800",textTransform:"uppercase",letterSpacing:"1px",flexShrink:0}},"✅ "+PROMPT_VERSIONS[S.promptVersion]?.name),
+  qsTitleInp,qsCatSel,qsSaveBtn
+]));
 
 // Refresh single section function
 async function refreshSection(sectionKey,sectionLabel){
@@ -1429,14 +1444,36 @@ h("button",{className:"ob",style:{fontSize:"8px",padding:"2px 6px"},onClick:()=>
 ]),
 h("pre",{className:"bc-c",style:{maxHeight:"200px",overflow:"auto"}},content||"(empty)"),
 ]);}
-// V1 ONUS format
+// V1 ONUS / V3 Genius format
 if(r.lyrics_prompt){
 w.append(rBlock("LYRICS","🎤",r.lyrics_prompt,"ai-l","#D4AF37","lyrics_prompt"));
 w.append(rBlock("STYLE","🎛️",r.style_prompt,"ai-s","#C0392B","style_prompt"));
 w.append(rBlock("ALT 1","🎛️",r.alt_style_1,"ai-a1","#E67E22","alt_style_1"));
 w.append(rBlock("ALT 2","🎛️",r.alt_style_2,"ai-a2","#E67E22","alt_style_2"));
-w.append(rBlock("VOCAL","🗣️",r.vocal_direction,"ai-v","#E67E22","vocal_direction"));
-w.append(rBlock("ARRANGEMENT","📐",r.arrangement_notes,"ai-ar","#9B59B6","arrangement_notes"));
+// VOCAL — always visible, ↺ Generate if missing
+if(r.vocal_direction){
+  w.append(rBlock("VOCAL DIRECTION","🗣️",r.vocal_direction,"ai-v","#E67E22","vocal_direction"));
+}else{
+  w.append(h("div",{className:"bc",style:{marginBottom:"8px",borderLeft:"3px solid #E67E22"}},[
+    h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"4px"}},[
+      h("span",{style:{fontSize:"11px",fontWeight:"700",color:"#E67E22"}},"🗣️ VOCAL DIRECTION"),
+      h("button",{className:"gb",style:{fontSize:"9px",padding:"4px 10px"},onClick:()=>refreshSection("vocal_direction","VOCAL DIRECTION")},"↺ Generate")
+    ]),
+    h("div",{style:{fontSize:"10px",color:"var(--tx3)",fontStyle:"italic",padding:"6px"}},"Not in this result — tap Generate to add")
+  ]));
+}
+// ARRANGEMENT — always visible, ↺ Generate if missing
+if(r.arrangement_notes){
+  w.append(rBlock("ARRANGEMENT","📐",r.arrangement_notes,"ai-ar","#9B59B6","arrangement_notes"));
+}else{
+  w.append(h("div",{className:"bc",style:{marginBottom:"8px",borderLeft:"3px solid #9B59B6"}},[
+    h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"4px"}},[
+      h("span",{style:{fontSize:"11px",fontWeight:"700",color:"#9B59B6"}},"📐 ARRANGEMENT"),
+      h("button",{className:"gb",style:{fontSize:"9px",padding:"4px 10px"},onClick:()=>refreshSection("arrangement_notes","ARRANGEMENT")},"↺ Generate")
+    ]),
+    h("div",{style:{fontSize:"10px",color:"var(--tx3)",fontStyle:"italic",padding:"6px"}},"Not in this result — tap Generate to add")
+  ]));
+}
 }
 // V2 Floss Suno Sauce format
 if(r.style_box_2){
