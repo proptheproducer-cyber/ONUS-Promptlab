@@ -321,7 +321,7 @@ const INITIAL_PROMPTS=[
 ];
 
 // ═══════ STATE ═══════
-let S={prompts:[],builder:[],masters:[],view:"create",cat:"all",tags:[],q:"",edit:null,copied:null,timeline:[],scores:{hook:7,section:6,groove:8,emotion:7,lyrics:6,spectral:5,translation:5,novelty:6},sideCollapsed:{},aiResult:null,aiDesc:"",masterDraft:"",promptVersion:"v1",scoringPromptId:"",
+let S={prompts:[],builder:[],masters:[],view:"create",cat:"all",tags:[],q:"",edit:null,copied:null,timeline:[],scores:{hook:7,section:6,groove:8,emotion:7,lyrics:6,spectral:5,translation:5,novelty:6},sideCollapsed:{},aiResult:null,aiDesc:"",masterDraft:"",promptVersion:"v1",feedback:"",scoringPromptId:"",
 // Project context — persists across sessions
 project:{name:"",genre:"",bpm:"",key:"",mood:"",type:"song"},
 // Result tracking — link prompts to Suno URLs
@@ -1383,6 +1383,64 @@ w.append(h("div",{style:{background:"rgba(212,175,55,0.07)",border:"1px solid rg
   h("span",{style:{fontSize:"10px",color:"var(--gold)",fontWeight:"800",textTransform:"uppercase",letterSpacing:"1px",flexShrink:0}},"✅ "+PROMPT_VERSIONS[S.promptVersion]?.name),
   qsTitleInp,qsCatSel,qsSaveBtn
 ]));
+
+// PHASE 3: LYRIC FEEDBACK LOOP
+const fbCard=h("div",{style:{background:"rgba(248,113,113,0.05)",border:"1px solid rgba(248,113,113,0.18)",borderRadius:"10px",padding:"12px",margin:"14px 0 10px"}});
+const fbHdr=h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"8px"}});
+fbHdr.appendChild(h("div",{},[h("div",{style:{fontSize:"12px",fontWeight:"800",color:"rgba(248,113,113,0.9)"}},"\u274c Reject & Refine"),h("div",{style:{fontSize:"9px",color:"var(--tx3)",marginTop:"2px"}},"Tell ONUS what's wrong \u2014 reruns with your critique")]));
+let fbOpen=!!S.feedback;
+const fbToggle=h("button",{style:{padding:"3px 8px",borderRadius:"6px",border:"1px solid rgba(248,113,113,0.2)",background:"rgba(248,113,113,0.06)",color:"rgba(248,113,113,0.7)",fontSize:"10px",cursor:"pointer"}});
+fbToggle.textContent=fbOpen?"\u25b2 Hide":"\u25bc Critique";
+const fbBody=h("div",{style:{display:fbOpen?"block":"none"}});
+fbToggle.onclick=()=>{fbOpen=!fbOpen;fbBody.style.display=fbOpen?"block":"none";fbToggle.textContent=fbOpen?"\u25b2 Hide":"\u25bc Critique";};
+fbHdr.appendChild(fbToggle);fbCard.appendChild(fbHdr);
+const fbChips=h("div",{style:{display:"flex",flexWrap:"wrap",gap:"4px",marginBottom:"8px"}});
+["Hook is too generic","Lyrics too surface-level","Style prompt is off","Needs to be darker","Needs more energy","Wrong era or vibe","Too predictable","Rework the structure","Wrong vocal direction","Arrangement feels flat"].forEach(chip=>{
+  const btn=h("button",{style:{padding:"3px 9px",borderRadius:"12px",border:"1px solid rgba(248,113,113,0.2)",background:"rgba(248,113,113,0.06)",color:"rgba(248,113,113,0.7)",fontSize:"9px",cursor:"pointer",fontFamily:"var(--fn,system-ui)"}});
+  btn.textContent=chip;
+  btn.onclick=()=>{const cur=fbInp.value.trim();fbInp.value=(cur?cur+". ":"")+chip;S.feedback=fbInp.value;};
+  fbChips.appendChild(btn);
+});
+fbBody.appendChild(fbChips);
+const fbInp=h("textarea",{style:{width:"100%",minHeight:"70px",background:"rgba(0,0,0,0.3)",border:"1px solid rgba(248,113,113,0.2)",borderRadius:"8px",color:"#fff",fontSize:"11px",padding:"8px",fontFamily:"var(--fn,system-ui)",boxSizing:"border-box",resize:"vertical"},placeholder:"What needs to change? Be specific. The hook is too generic, make it darker and more personal."});
+fbInp.value=S.feedback||"";
+fbInp.oninput=()=>{S.feedback=fbInp.value;};
+fbBody.appendChild(fbInp);
+const fbBtn=h("button",{style:{width:"100%",marginTop:"8px",padding:"11px",borderRadius:"10px",border:"1px solid rgba(248,113,113,0.3)",background:"linear-gradient(135deg,rgba(248,113,113,0.15),rgba(248,113,113,0.08))",color:"rgba(248,113,113,0.95)",fontSize:"13px",fontWeight:"800",cursor:"pointer",fontFamily:"var(--fn,system-ui)"}},"\u26a1 Regen with Critique");
+fbBtn.onclick=async()=>{
+  const critique=fbInp.value.trim();
+  if(!critique){toast("Add your critique first");return;}
+  if(!API_KEY){toast("Set your API key first");return;}
+  const r2=S.aiResult;
+  const oldContent=r2.lyrics_prompt?"=== LYRICS ===\n"+(r2.lyrics_prompt||"")+"\n\n=== STYLE ===\n"+(r2.style_prompt||""):r2.style_box_2?"=== STYLE BOX 2 ===\n"+(r2.style_box_2||""):"(archived)";
+  S.prompts.unshift({id:uid(),title:"[Rejected] "+(r2.title||"AI Prompt")+" \u2014 "+new Date().toLocaleDateString(),category:"master",tags:r2.tags||[],content:oldContent,rating:2,created:Date.now(),versions:[]});
+  save();
+  let regenPrompt=(S.lastSent?S.lastSent.userMessage:"Generate a new version.")+"\n\n--- FEEDBACK ON PREVIOUS VERSION ---\n"+critique+"\n\nAddress ALL feedback above. Do NOT repeat the rejected output. Generate a completely new version.";
+  fbBtn.textContent="\u23f3 ONUS is rewriting...";fbBtn.disabled=true;
+  const sysPrompt=S.promptVersion==="v3"?GENIUS_SYSTEM:S.promptVersion==="v2"?FLOSS_SYSTEM:ONUS_SYSTEM;
+  try{
+    const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":API_KEY,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-5-20250929",max_tokens:24000,temperature:1,thinking:{type:"enabled",budget_tokens:16000},system:sysPrompt,messages:[{role:"user",content:regenPrompt}]})});
+    if(!res.ok){const err=await res.json().catch(()=>({}));toast("Regen failed: "+(err.error?.message||res.status));fbBtn.textContent="\u26a1 Regen with Critique";fbBtn.disabled=false;return;}
+    const data=await res.json();
+    const text=data.content.filter(c=>c.type==="text").map(c=>c.text||"").join("");
+    let parsed;
+    try{const ct=text.trim().replace(/^```json\s*/,"").replace(/```$/,"").trim();parsed=JSON.parse(ct);}
+    catch(e){const si=text.indexOf("{");const ei=text.lastIndexOf("}");if(si>=0&&ei>si){try{parsed=JSON.parse(text.substring(si,ei+1));}catch(pe){}}}
+    if(!parsed){toast("Regen parse error");fbBtn.textContent="\u26a1 Regen with Critique";fbBtn.disabled=false;return;}
+    S.aiResult=parsed;S.feedback="";
+    try{localStorage.setItem("onus3-ai",JSON.stringify(parsed));}catch(ex){}
+    try{
+      const entry={id:uid(),timestamp:new Date().toISOString(),version:(S.promptVersion==="v3"?"V3 Genius":S.promptVersion==="v2"?"V2 Floss":"V1.4 ONUS")+" [REGEN]",
+        project:S.lastSent?.projectSnapshot||{},builderBlocks:S.lastSent?.builderSnapshot||[],
+        userMessage:regenPrompt,outputTitle:parsed.title||"",outputStyle:parsed.style_prompt||"",outputTags:parsed.tags||[]};
+      const log=JSON.parse(localStorage.getItem("onus3-genlog")||"[]");
+      log.unshift(entry);if(log.length>100)log.pop();localStorage.setItem("onus3-genlog",JSON.stringify(log));
+    }catch(ex){}
+    save();render();toast("Rewritten! Rejected version saved to Library.");
+  }catch(e){toast("Regen error: "+e.message);fbBtn.textContent="\u26a1 Regen with Critique";fbBtn.disabled=false;}
+};
+fbBody.appendChild(fbBtn);fbCard.appendChild(fbBody);w.append(fbCard);
+// END PHASE 3
 
 // Refresh single section function
 async function refreshSection(sectionKey,sectionLabel){
