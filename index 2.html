@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ONUS PromptLab">
@@ -16,7 +16,7 @@ body{font-family:var(--fn);background:linear-gradient(145deg,var(--bg),var(--bg2
 .toast{position:fixed;top:calc(12px + var(--st));left:50%;transform:translateX(-50%);background:var(--gold);color:var(--bg);padding:10px 24px;border-radius:10px;font-weight:700;font-size:13px;z-index:9999;box-shadow:0 8px 32px rgba(212,175,55,0.35);animation:fs .25s ease;pointer-events:none;}
 @keyframes fs{from{opacity:0;transform:translateX(-50%) translateY(-10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 /* Header */
-.hdr{display:flex;align-items:center;justify-content:space-between;padding:calc(10px + var(--st)) 16px 10px;border-bottom:1px solid rgba(212,175,55,0.12);background:rgba(10,14,26,0.92);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;}
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:calc(10px + var(--st)) 16px 10px;border-bottom:1px solid rgba(212,175,55,0.12);background:rgba(10,14,26,0.92);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;}
 .hdr-l{display:flex;align-items:center;gap:10px;}
 .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--gold),#aa8520);display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 4px 16px rgba(212,175,55,0.25);}
 .logo-t{font-size:17px;font-weight:800;letter-spacing:1.5px;color:#fff;line-height:1.2;}
@@ -27,7 +27,7 @@ body{font-family:var(--fn);background:linear-gradient(145deg,var(--bg),var(--bg2
 .nb.a{background:var(--gold-dim);color:var(--gold);border-color:var(--gold-b);}
 .bdg{background:var(--gold);color:var(--bg);border-radius:7px;padding:1px 5px;font-size:9px;font-weight:800;margin-left:2px;}
 /* Mobile nav */
-.mn{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(10,14,26,0.95);backdrop-filter:blur(16px);border-top:1px solid rgba(212,175,55,0.1);padding:4px 0 calc(4px + var(--sb));z-index:100;}
+.mn{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(10,14,26,0.95);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-top:1px solid rgba(212,175,55,0.1);padding:4px 0 calc(4px + var(--sb));z-index:100;}
 .mn-i{display:flex;justify-content:space-around;}
 .mn-b{display:flex;flex-direction:column;align-items:center;gap:1px;padding:5px 8px;border:0;background:0;color:var(--tx2);font-size:8px;font-weight:600;cursor:pointer;font-family:var(--fn);}
 .mn-b.a{color:var(--gold);}
@@ -136,7 +136,7 @@ body{font-family:var(--fn);background:linear-gradient(145deg,var(--bg),var(--bg2
 .tl-title{font-size:13px;font-weight:700;color:#fff;margin-bottom:8px;}
 .tl-sub{font-size:10px;color:var(--tx3);margin-bottom:10px;}
 .tl-track{display:flex;gap:4px;flex-wrap:wrap;min-height:40px;padding:8px;border-radius:8px;border:2px dashed rgba(255,255,255,0.08);background:rgba(0,0,0,0.15);margin-bottom:10px;}
-.tl-block{padding:6px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;user-select:none;}
+.tl-block{padding:6px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;-webkit-user-select:none;user-select:none;}
 .tl-block .tl-x{font-size:9px;opacity:.6;cursor:pointer;margin-left:4px;}
 .tl-palette{display:flex;flex-wrap:wrap;gap:4px;}
 .tl-add{padding:5px 10px;border-radius:6px;border:1px solid var(--bd);background:rgba(255,255,255,0.03);color:var(--tx2);font-size:10px;font-weight:600;cursor:pointer;font-family:var(--fn);}
