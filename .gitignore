@@ -1,16 +1,3 @@
-# macOS system files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Archive artifacts
-*.zip
-*.tar.gz
-
 # Python
 __pycache__/
 *.pyc
@@ -24,11 +11,26 @@ build/
 venv/
 env/
 
-# Playwright
+# Playwright (legacy tools — no longer used in v2)
 suno_automation_profile/
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Archives
+*.zip
+*.tar.gz
 
 # Editor
 .vscode/
 .idea/
 *.swp
 *.swo
+
+# Env files with secrets — NEVER commit these
+.env
+*.env.local
