@@ -5,19 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="ONUS PromptLab">
-<meta name="theme-color" content="#0a0e1a">
-<title>ONUS PromptLab 1.4</title>
-<meta name="description" content="ONUS PromptLab — build, store, fuse, and AI-generate music prompts optimized for Suno. Powered by Claude AI.">
-<meta property="og:title" content="ONUS PromptLab">
+<meta name="apple-mobile-web-app-title" content="Prompt Genius">
+<title>Prompt Genius 2.1</title>
+<meta name="description" content="Prompt Genius 2.1 — build, store, fuse, and AI-generate music prompts optimized for Suno. Powered by Claude AI.">
+<meta property="og:title" content="Prompt Genius 2.1">
 <meta property="og:description" content="Build, store, fuse & AI-generate music prompts optimized for Suno. Powered by Claude AI.">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="ONUS PromptLab">
+<meta name="twitter:title" content="Prompt Genius 2.1">
 <meta name="twitter:description" content="Build, store, fuse & AI-generate music prompts optimized for Suno.">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 :root{--bg:#080b14;--bg2:#0d1220;--bg3:#131a2e;--gold:#D4AF37;--gold2:#f0d060;--gold-dim:rgba(212,175,55,0.1);--gold-b:rgba(212,175,55,0.2);--tx:#e8ecf2;--tx2:#8494a7;--tx3:#4a5568;--bd:rgba(255,255,255,0.06);--card:rgba(255,255,255,0.025);--fn:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;--mo:'Courier New',Courier,monospace;--st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px);--green:#34d399;--red:#f87171;--blue:#60a5fa;--r:12px;}
+.dn{display:none!important;}
 body{font-family:var(--fn);background:var(--bg);color:var(--tx);min-height:100dvh;overflow-x:hidden;}
 
 /* Toast */
@@ -207,7 +207,7 @@ body{font-family:var(--fn);background:var(--bg);color:var(--tx);min-height:100dv
 <nav class="mn" id="mobileNav">
 <div class="mn-i">
 <button class="mn-b a" onclick="switchView('create')" id="mn-create"><span class="mi">🤖</span>Create</button>
-<button class="mn-b" onclick="switchView('library')" id="mn-library"><span class="mi">📚</span>Library<span id="mn-badge" style="display:none" class="bdg">0</span></button>
+<button class="mn-b" onclick="switchView('library')" id="mn-library"><span class="mi">📚</span>Library<span id="mn-badge" class="bdg dn">0</span></button>
 <button class="mn-b" onclick="switchView('saved')" id="mn-saved"><span class="mi">⚡</span>Masters</button>
 </div>
 </nav>
@@ -333,6 +333,8 @@ let S={prompts:[],builder:[],masters:[],view:"create",cat:"all",tags:[],q:"",edi
 project:{name:"",genre:"",bpm:"",key:"",mood:"",type:"song"},
 // Result tracking — link prompts to Suno URLs
 results:[],
+// Suno generations tracking
+sunoGens:[],
 // Last prompt sent (for debugging/visibility)
 lastSent:null
 };
@@ -456,7 +458,7 @@ Return ONLY valid JSON with these keys:
 Return ONLY valid JSON. No markdown fences. No explanation text.`;
 
 // ═══════ STORAGE ═══════
-function save(){try{localStorage.setItem("onus3-p",JSON.stringify(S.prompts))}catch(e){}try{localStorage.setItem("onus3-b",JSON.stringify(S.builder))}catch(e){}try{localStorage.setItem("onus3-m",JSON.stringify(S.masters))}catch(e){}try{localStorage.setItem("onus3-tl",JSON.stringify(S.timeline))}catch(e){}try{localStorage.setItem("onus3-sc",JSON.stringify(S.scores))}catch(e){}try{localStorage.setItem("onus3-ai",JSON.stringify(S.aiResult))}catch(e){}try{localStorage.setItem("onus3-aid",S.aiDesc)}catch(e){}try{localStorage.setItem("onus3-pv",S.promptVersion)}catch(e){}try{localStorage.setItem("onus3-proj",JSON.stringify(S.project))}catch(e){}try{localStorage.setItem("onus3-res",JSON.stringify(S.results))}catch(e){}}
+function save(){try{localStorage.setItem("onus3-p",JSON.stringify(S.prompts))}catch(e){}try{localStorage.setItem("onus3-b",JSON.stringify(S.builder))}catch(e){}try{localStorage.setItem("onus3-m",JSON.stringify(S.masters))}catch(e){}try{localStorage.setItem("onus3-tl",JSON.stringify(S.timeline))}catch(e){}try{localStorage.setItem("onus3-sc",JSON.stringify(S.scores))}catch(e){}try{localStorage.setItem("onus3-ai",JSON.stringify(S.aiResult))}catch(e){}try{localStorage.setItem("onus3-aid",S.aiDesc)}catch(e){}try{localStorage.setItem("onus3-pv",S.promptVersion)}catch(e){}try{localStorage.setItem("onus3-proj",JSON.stringify(S.project))}catch(e){}try{localStorage.setItem("onus3-res",JSON.stringify(S.results))}catch(e){}try{localStorage.setItem("onus3-sg",JSON.stringify(S.sunoGens))}catch(e){}}
 function load(){try{const p=localStorage.getItem("onus3-p");if(p){const st=JSON.parse(p);const ids=new Set(st.map(x=>x.id));const miss=INITIAL_PROMPTS.filter(x=>!ids.has(x.id));S.prompts=[...miss,...st];}else S.prompts=[...INITIAL_PROMPTS];}catch(e){S.prompts=[...INITIAL_PROMPTS];}
 const existIds=new Set(S.prompts.map(x=>x.id));
 const existTitles=new Set(S.prompts.map(x=>x.title?.toLowerCase()));
@@ -470,6 +472,7 @@ try{const aid=localStorage.getItem("onus3-aid");if(aid)S.aiDesc=aid;}catch(e){}
 try{const pv=localStorage.getItem("onus3-pv");if(pv)S.promptVersion=pv;}catch(e){}
 try{const pj=localStorage.getItem("onus3-proj");if(pj)S.project=JSON.parse(pj);}catch(e){}
 try{const rs=localStorage.getItem("onus3-res");if(rs)S.results=JSON.parse(rs);}catch(e){}
+try{const sg=localStorage.getItem("onus3-sg");if(sg){S.sunoGens=JSON.parse(sg);S.sunoGens.filter(g=>g.status!=="complete"&&g.status!=="error").forEach(g=>pollSunoGen(g.id,g.songIds));}}catch(e){}
 try{const ls=localStorage.getItem("onus3-lastSent");if(ls)S.lastSent=JSON.parse(ls);}catch(e){}}
 
 // ═══════ IMPORT/EXPORT ═══════
@@ -702,6 +705,75 @@ function tlOutput(){return S.timeline.map(t=>{const s=SECTIONS.find(x=>x.id===t.
 // Claude AI Generation — FULL ONUS SYSTEM
 let API_KEY=localStorage.getItem("onus-api-key")||"";
 function setApiKey(k){API_KEY=k;localStorage.setItem("onus-api-key",k);}
+let SUNO_COOKIE=localStorage.getItem("onus3-sunoCookie")||"";
+function setSunoCookie(c){SUNO_COOKIE=c.trim();localStorage.setItem("onus3-sunoCookie",SUNO_COOKIE);save();}
+
+const activePollers={};
+
+async function validateSunoCookie(cookie){
+  const c=cookie||SUNO_COOKIE;
+  if(!c){toast("Paste your Suno Cookie first");return null;}
+  toast("Connecting to Suno API...");
+  try{
+    const res=await fetch("/api/validate-cookie",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cookie:c})});
+    if(!res.ok){
+      const err=await res.json().catch(()=>({}));
+      toast("Suno Error: "+(err.detail||res.status));
+      return null;
+    }
+    const data=await res.json();
+    toast(`✅ Suno Connected! Credits left: ${data.credits_left}`);
+    return data;
+  }catch(e){
+    toast("Backend server unreachable. Make sure v2.0 FastAPI is running.");
+    return null;
+  }
+}
+
+async function sendMasterToSuno(title,lyrics,style){
+  if(!SUNO_COOKIE){toast("Please configure your Suno Cookie first in Settings/Create.");return;}
+  toast("🚀 Sending prompt to Suno...");
+  try{
+    const res=await fetch("/api/generate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cookie:SUNO_COOKIE,title:title||"ONUS Generated Track",lyrics:lyrics||"[Verse]\nONUS Prompt",style:style||"r&b, soul, 90 bpm"})});
+    if(!res.ok){
+      const err=await res.json().catch(()=>({}));
+      toast("Suno Gen Failed: "+(err.detail||res.status));
+      return;
+    }
+    const data=await res.json();
+    const item={id:uid(),title:title||"ONUS Masterpiece",songIds:data.song_ids,status:"queued",songs:[],created:Date.now()};
+    if(!S.sunoGens)S.sunoGens=[];
+    S.sunoGens.unshift(item);
+    save();render();
+    toast("🎵 Generation started! Polling status...");
+    pollSunoGen(item.id,data.song_ids);
+  }catch(e){
+    toast("Server error — check backend connection.");
+  }
+}
+
+function pollSunoGen(genId,songIds){
+  if(activePollers[genId])return;
+  activePollers[genId]=setInterval(async()=>{
+    try{
+      const res=await fetch(`/api/status/${songIds.join(",")}?cookie=${encodeURIComponent(SUNO_COOKIE)}`);
+      if(!res.ok)return;
+      const songs=await res.json();
+      const item=S.sunoGens?.find(g=>g.id===genId);
+      if(!item){clearInterval(activePollers[genId]);delete activePollers[genId];return;}
+      item.songs=songs;
+      const allDone=songs.length>0&&songs.every(s=>s.status==="complete"||s.status==="error");
+      if(songs.some(s=>s.status==="streaming"))item.status="streaming";
+      if(allDone){
+        item.status="complete";
+        clearInterval(activePollers[genId]);
+        delete activePollers[genId];
+        toast("🎉 Suno track ready to play!");
+      }
+      save();render();
+    }catch(e){}
+  },5000);
+}
 const ONUS_SYSTEM=`You are ONUS — a hit-song prompt engineer and songwriter created by Proptheproducer. You operate under strict protocol lock and reason through embedded research before every generation.
 
 ═══ MANDATORY HIT-REASONING PROCESS ═══
@@ -1251,6 +1323,38 @@ h("span",{style:{fontSize:"10px",color:"var(--green)"}},"✅ API: "+API_KEY.slic
 h("button",{className:"ob",style:{fontSize:"9px",padding:"3px 8px"},onClick:()=>{setApiKey("");render();}},"Change"),
 ]));}
 
+// ═── SUNO COOKIE SETUP (v2.0) ──═
+const hasSunoCookie=SUNO_COOKIE&&SUNO_COOKIE.length>20;
+const sunoBox=h("div",{style:{marginBottom:"14px",padding:"10px",borderRadius:"8px",background:"rgba(212,175,55,0.06)",border:"1px solid var(--gold-b)"}},[
+  h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"4px"}},[
+    h("span",{style:{fontSize:"11px",fontWeight:"800",color:"var(--gold)"}},"🎵 Suno API Connection (v2.0)"),
+    hasSunoCookie?h("span",{style:{fontSize:"9px",color:"var(--green)"}},"✅ Connected"):h("span",{style:{fontSize:"9px",color:"var(--tx3)"}},"Not Set")
+  ]),
+  h("div",{style:{fontSize:"10px",color:"var(--tx2)",marginBottom:"6px",lineHeight:"1.5"}},"Copy your cookie from suno.com (DevTools F12 → Network → copy Cookie header). Enables 1-click generation directly to Suno!"),
+  (()=>{
+    const ci=h("input",{className:"fi",placeholder:"Paste Suno Cookie header...",type:"password",style:{fontSize:"10px",marginBottom:"6px"}});
+    if(SUNO_COOKIE)ci.value=SUNO_COOKIE;
+    const bRow=h("div",{style:{display:"flex",gap:"6px"}},[
+      h("button",{className:"gb",style:{fontSize:"10px",padding:"4px 10px"},onClick:()=>{
+        const val=ci.value.trim();
+        if(val.length>20){
+          setSunoCookie(val);
+          render();
+          toast("Cookie saved!");
+          validateSunoCookie(val);
+        }else if(SUNO_COOKIE){
+          validateSunoCookie(SUNO_COOKIE);
+        }else{
+          toast("Paste full cookie first");
+        }
+      }},"Save & Test Connection"),
+      SUNO_COOKIE?h("button",{className:"ob",style:{fontSize:"10px",padding:"4px 8px"},onClick:()=>{setSunoCookie("");render();toast("Cookie cleared");}},"Clear"):null
+    ].filter(Boolean));
+    return h("div",{},[ci,bRow]);
+  })()
+]);
+w.append(sunoBox);
+
 // ═── BUILDER CONTEXT (shown above prompt input) ──═
 // Timeline context
 if(S.timeline.length>0){
@@ -1769,6 +1873,43 @@ w.append(h("div",{style:{display:"flex",gap:"6px",marginTop:"10px"}},[
 h("button",{className:"gb",style:{flex:1,padding:"14px",fontSize:"14px",fontWeight:"800"},onClick:()=>{saveFinalMaster(editArea.value,titleInput.value);}},"💾 Save Master"),
 h("button",{className:"gb",style:{flex:1,padding:"14px"},onClick:()=>cp(editArea.value,"final")},S.copied==="final"?"✓ Copied":"📋 Copy"),
 h("button",{className:"ob",style:{padding:"14px"},onClick:()=>{S.view="builder";render();}},"← Back"),
+]));
+
+// ═── SUNO DIRECT GENERATION (v2.0) ──═
+w.append(h("div",{style:{marginTop:"16px",padding:"14px",borderRadius:"var(--r)",background:"linear-gradient(135deg,rgba(52,211,153,0.1),rgba(52,211,153,0.02))",border:"1px solid rgba(52,211,153,0.3)"}},[
+  h("div",{style:{fontSize:"13px",fontWeight:"800",color:"var(--green)",marginBottom:"4px"}},"🎵 Send Direct to Suno (v2.0)"),
+  h("div",{style:{fontSize:"10px",color:"var(--tx2)",marginBottom:"10px"}},"Triggers generation on Suno automatically via FastAPI backend. No copy-pasting required."),
+  h("div",{style:{display:"flex",gap:"6px",marginBottom:"10px"}},[
+    h("button",{className:"gb",style:{flex:1,padding:"12px",fontSize:"13px",fontWeight:"800",background:"linear-gradient(135deg,#34d399,#059669)",color:"#000"},onClick:()=>{
+      const text=editArea.value||compile();
+      const title=titleInput.value||S.project.name||"ONUS Masterpiece";
+      let style="r&b, soul, melodic, 90 bpm";
+      let lyrics=text;
+      if(text.includes("---")||text.includes("[")){
+        const lines=text.split("\n");
+        const styleLines=lines.filter(l=>l.toLowerCase().includes("style")||l.toLowerCase().includes("genre")||l.toLowerCase().includes("bpm"));
+        if(styleLines.length>0)style=styleLines.map(l=>l.replace(/^---.*---|style:|genre:/gi,"").trim()).join(", ").slice(0,300);
+      }
+      sendMasterToSuno(title,lyrics,style);
+    }},"⚡ Send to Suno Direct")
+  ]),
+  (S.sunoGens&&S.sunoGens.length>0)?h("div",{style:{marginTop:"12px"}},[
+    h("div",{style:{fontSize:"11px",fontWeight:"700",color:"#fff",marginBottom:"6px"}},"📡 Recent Suno Generations:"),
+    ...S.sunoGens.slice(0,5).map(g=>h("div",{style:{padding:"8px",borderRadius:"8px",background:"rgba(0,0,0,0.3)",marginBottom:"6px",border:"1px solid var(--bd)"}},[
+      h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"4px"}},[
+        h("span",{style:{fontSize:"11px",fontWeight:"700",color:"var(--gold)"}},g.title),
+        h("span",{style:{fontSize:"9px",padding:"2px 6px",borderRadius:"4px",background:g.status==="complete"?"rgba(52,211,153,0.2)":g.status==="error"?"rgba(248,113,113,0.2)":"rgba(240,208,96,0.2)",color:g.status==="complete"?"var(--green)":g.status==="error"?"var(--red)":"var(--gold)"}},(g.status||"queued").toUpperCase())
+      ]),
+      (g.songs&&g.songs.length>0)?h("div",{style:{display:"flex",flexDirection:"column",gap:"6px",marginTop:"6px"}},g.songs.map(s=>h("div",{style:{display:"flex",alignItems:"center",gap:"8px",background:"rgba(255,255,255,0.03)",padding:"4px 8px",borderRadius:"6px"}},[
+        s.image_url?h("img",{src:s.image_url,style:{width:"32px",height:"32px",borderRadius:"4px",objectFit:"cover"}}):null,
+        h("div",{style:{flex:1,overflow:"hidden"}},[
+          h("div",{style:{fontSize:"10px",fontWeight:"600",color:"#fff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},s.title||"Track"),
+          s.audio_url?h("audio",{controls:true,src:s.audio_url,style:{height:"24px",width:"100%",marginTop:"2px"}}):h("span",{style:{fontSize:"9px",color:"var(--tx3)"}},(s.status||"generating")+"...")
+        ]),
+        s.song_url?h("a",{href:s.song_url,target:"_blank",rel:"noopener noreferrer",style:{fontSize:"10px",color:"var(--gold)",textDecoration:"none",whiteSpace:"nowrap"}},"🔗 Suno.com"):null
+      ]))):h("div",{style:{fontSize:"9px",color:"var(--tx3)"}},"Queued / generating on Suno...")
+    ]))
+  ]):null
 ]));
 }
 

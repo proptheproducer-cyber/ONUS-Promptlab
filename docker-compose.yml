@@ -1,0 +1,16 @@
+# ONUS PromptLab v2.0 — Local Development
+# Usage: docker-compose up --build
+# Then open http://localhost:10000
+
+services:
+  onus:
+    build: .
+    ports:
+      - "10000:10000"
+    volumes:
+      # Hot-reload index.html changes without rebuilding the container
+      - ./index.html:/app/index.html
+      - ./backend:/app/backend
+    environment:
+      - PYTHONPATH=/app
+    restart: unless-stopped

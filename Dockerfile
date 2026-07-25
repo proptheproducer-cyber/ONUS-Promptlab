@@ -1,29 +1,28 @@
-# ─── ONUS PromptLab — Docker Deploy ───────────────────────────────────────────
-# Single-stage build: Nginx serves the static index.html
-# No build step needed — pure HTML/JS app
+# ─── ONUS PromptLab v2.0 — Docker ─────────────────────────────────────────────
+# FastAPI backend serves both the API and the static index.html
+# Port 10000 = Render.com default for web services
 
-FROM nginx:alpine
+FROM python:3.12-slim
 
-# Remove the default Nginx welcome page
-RUN rm /usr/share/nginx/html/index.html
+# Install dependencies first (cached layer — only rebuilds if requirements change)
+WORKDIR /app
+COPY backend/requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the app into Nginx's serve directory
-COPY index.html /usr/share/nginx/html/index.html
+# Copy backend code
+COPY backend/ ./backend/
 
-# Nginx config: serve on port 80, proper MIME types, no caching for the HTML
-RUN printf 'server {\n\
-    listen 80;\n\
-    root /usr/share/nginx/html;\n\
-    index index.html;\n\
-    location / {\n\
-        add_header Cache-Control "no-cache, no-store, must-revalidate";\n\
-        try_files $uri $uri/ /index.html;\n\
-    }\n\
-}\n' > /etc/nginx/conf.d/default.conf
+# Copy the frontend (single file)
+COPY index.html ./index.html
 
-# Render.com and most hosts expect port 10000 — expose both
-EXPOSE 80
+# Make sure Python finds the backend module
+ENV PYTHONPATH=/app
 
-# Health check so Render knows the container is healthy
-HEALTHCHECK --interval=30s --timeout=3s \
-  CMD wget -qO- http://localhost/ || exit 1
+# Render.com routes external traffic to port 10000
+EXPOSE 10000
+
+# Health check — Render uses this to decide if the deploy succeeded
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
+  CMD python -c "import httpx; httpx.get('http://localhost:10000/health').raise_for_status()"
+
+CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "10000"]
